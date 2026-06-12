@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đông (Dennis) Nguyễn — Portfolio</title>
+<meta name="description" content="Retail Operations · Visual Merchandising · Training — portfolio of Đông (Dennis) Nguyễn">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<meta name="theme-color" content="#faf8f3">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400;1,9..144,600&family=Archivo:wght@300;400;500;600&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+</script>
+<style>
+:root{
+  --paper: #faf8f3;
+  --paper-2: #f2efe7;
+  --ink: #161410;
+  --ink-60: rgba(22,20,16,.6);
+  --ink-30: rgba(22,20,16,.3);
+  --ink-12: rgba(22,20,16,.12);
+  --serif: "Fraunces", Georgia, serif;
+  --sans: "Archivo", system-ui, sans-serif;
+}
+*{ margin:0; padding:0; box-sizing:border-box; }
+html{ scroll-behavior:auto; color-scheme:light; scrollbar-width:none; }
+
+/* ---------- ẩn scrollbar — cột mốc thay thế vai trò định vị ---------- */
+::-webkit-scrollbar{ width:0; height:0; display:none; }
+body{ background:var(--paper); color:var(--ink); font-family:var(--sans);
+  -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+::selection{ background:var(--ink); color:var(--paper); }
+
+/* 3D canvas behind everything */
+#stage{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+/* film grain */
+body::after{ content:""; position:fixed; inset:0; z-index:50; pointer-events:none; opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* ---------- header ---------- */
+#topbar{ position:fixed; top:0; left:0; right:0; z-index:40;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px clamp(20px, 4vw, 48px);
+  background:color-mix(in srgb, var(--paper) 82%, transparent);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--ink-12); }
+#topbar .logo{ font-size:12px; letter-spacing:.3em; font-weight:600; }
+#topbar .logo em{ font-family:var(--serif); font-style:italic; font-weight:400;
+  letter-spacing:.04em; color:var(--ink-60); margin-left:10px; }
+#topbar .btns{ display:flex; gap:10px; }
+#topbar button{ font-family:var(--sans); font-size:11px; letter-spacing:.22em;
+  background:transparent; color:var(--ink); border:1px solid var(--ink-30);
+  border-radius:999px; padding:8px 16px; transition:background .25s, color .25s; }
+#topbar button:hover{ background:var(--ink); color:var(--paper); }
+#milestones{ position:fixed; right:20px; top:50%; transform:translateY(-50%); z-index:39;
+  display:flex; flex-direction:column; gap:13px; }
+#milestones button{ position:relative; width:7px; height:7px; border-radius:999px;
+  border:1px solid var(--ink-30); background:transparent; padding:0;
+  transition:height .35s ease, background .25s, border-color .25s, transform .25s; }
+#milestones button::after{ content:""; position:absolute; inset:-9px; } /* vùng bấm rộng */
+#milestones button::before{ content:attr(data-tip); position:absolute; right:20px; top:50%;
+  transform:translateY(-50%); font-size:9px; letter-spacing:.24em; color:var(--ink);
+  white-space:nowrap; opacity:0; transition:opacity .25s ease; pointer-events:none; }
+#milestones button:hover{ background:var(--ink); border-color:var(--ink); transform:scale(1.5); }
+#milestones button:hover::before{ opacity:.85; }
+#milestones button.on{ height:22px; background:var(--ink); border-color:var(--ink); }
+
+/* ---------- layout ---------- */
+main{ position:relative; z-index:10; }
+section{ position:relative; min-height:100vh; display:flex; align-items:center;
+  padding:clamp(86px, 11vh, 130px) clamp(20px, 6vw, 90px); }
+.col{ max-width:600px; position:relative; }
+section.right{ justify-content:flex-end; }
+section.center{ justify-content:center; text-align:center; }
+
+/* giant outline number behind each chapter */
+.bignum{ position:absolute; z-index:-1; top:50%; transform:translateY(-58%);
+  font-family:var(--serif); font-style:italic; font-weight:300; line-height:1;
+  font-size:clamp(180px, 34vw, 480px); color:transparent;
+  -webkit-text-stroke:1px var(--ink-30); user-select:none; pointer-events:none; }
+/* số nằm sau cột chữ (cùng bên với text) — bên trống dành riêng cho vật thể 3D */
+section.right .bignum{ right:-2vw; }
+section:not(.right):not(.center) .bignum{ left:-2vw; }
+
+.lbl{ font-size:11px; letter-spacing:.34em; color:var(--ink-60);
+  display:flex; align-items:center; gap:14px; margin-bottom:clamp(12px, 2vh, 22px); }
+.lbl::before{ content:""; width:44px; height:1px; background:var(--ink); }
+h2{ font-family:var(--serif); font-style:italic; font-weight:400;
+  font-size:clamp(30px, min(5.2vw, 7.2vh), 64px); line-height:1.04; letter-spacing:-0.015em;
+  margin-bottom:clamp(12px, 2.2vh, 24px); }
+.col > p{ font-size:15px; line-height:1.75; color:var(--ink-60); max-width:52ch; }
+.col ul{ list-style:none; margin-top:6px; }
+.col li{ font-size:clamp(13px, 1.8vh, 14.5px); line-height:1.55; color:var(--ink-60);
+  padding:clamp(8px, 1.4vh, 13px) 0 clamp(8px, 1.4vh, 13px) 26px; position:relative; border-top:1px solid var(--ink-12); }
+.col li::before{ content:"→"; position:absolute; left:0; top:clamp(8px, 1.4vh, 13px); color:var(--ink); }
+.tag{ display:inline-flex; align-items:center; gap:10px; margin-top:clamp(12px, 2vh, 20px);
+  font-size:10px; letter-spacing:.26em; color:var(--ink-60); }
+.tag::before{ content:""; width:26px; height:1px; background:var(--ink-30); }
+
+/* ---------- hero ---------- */
+#hero{ flex-direction:column; justify-content:center; align-items:center; text-align:center;
+  min-height:100svh; padding-top:10vh; }
+#hero .kicker{ font-size:clamp(9px, 1.2vw, 12px); letter-spacing:.42em; color:var(--ink-60); margin-bottom:3vh; }
+#hero h1{ font-family:var(--serif); font-style:italic; font-weight:300;
+  font-size:clamp(70px, 17vw, 230px); line-height:.92; letter-spacing:-0.03em; }
+#hero .name{ margin-top:3.4vh; font-family:var(--serif); font-size:clamp(17px, 2vw, 24px); }
+#hero .sub{ margin-top:1.4vh; font-size:11px; letter-spacing:.3em; color:var(--ink-60); }
+#hero .scrolldown{ position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
+  font-size:10px; letter-spacing:.4em; color:var(--ink-60); }
+#hero .scrolldown::after{ content:""; display:block; width:1px; height:38px;
+  background:var(--ink-30); margin:10px auto 0; animation:drop 1.8s ease-in-out infinite; }
+@keyframes drop{ 0%{transform:scaleY(0); transform-origin:top} 50%{transform:scaleY(1); transform-origin:top}
+  51%{transform-origin:bottom} 100%{transform:scaleY(0); transform-origin:bottom} }
+
+/* word-reveal — padding bù margin để không cắt nét xuống (g, y) và dấu tiếng Việt (ề, ậ) */
+.w{ display:inline-block; overflow:hidden; vertical-align:bottom;
+  padding:0.22em 0.12em 0.34em 0.06em; margin:-0.22em -0.12em -0.34em -0.06em; }
+.w > span{ display:inline-block; will-change:transform; }
+
+/* ---------- stats ---------- */
+.stats{ display:flex; gap:clamp(22px, 4vw, 54px); margin-top:clamp(18px, 3vh, 34px); flex-wrap:wrap; }
+.stat b{ display:block; font-family:var(--serif); font-weight:600;
+  font-size:clamp(34px, 4.4vw, 56px); font-variant-numeric:tabular-nums; }
+.stat span{ font-size:9.5px; letter-spacing:.24em; color:var(--ink-60); }
+
+/* ---------- contact ---------- */
+#contact .links{ display:flex; gap:14px; justify-content:center; margin-top:34px; flex-wrap:wrap; }
+#contact a{ font-size:11px; letter-spacing:.24em; text-decoration:none; color:var(--ink);
+  border:1px solid var(--ink-30); border-radius:999px; padding:13px 26px;
+  transition:background .25s, color .25s; }
+#contact a:hover{ background:var(--ink); color:var(--paper); }
+footer{ position:absolute; bottom:0; left:0; right:0; z-index:10; text-align:center;
+  padding:22px 20px 26px; font-size:10px; letter-spacing:.26em; color:var(--ink-60);
+  border-top:1px solid var(--ink-12); }
+
+/* ---------- brand marks ---------- */
+.bm{ display:flex; align-items:center; margin-bottom:clamp(10px, 1.8vh, 18px); height:clamp(40px, 6vh, 54px); }
+.bm img{ height:100%; width:auto; max-width:220px; object-fit:contain;
+  filter:grayscale(1) brightness(.25) contrast(1.15); }
+.bm img[src*="uniqlo"]{ filter:none; } /* SVG đã đổi nền đen, chữ trắng nguyên bản */
+.bm img[src*="hasaki"]{ filter:none; } /* SVG vector gốc đã đổi sẵn màu mực */
+.bm .word{ display:none; align-items:baseline; }
+.bm.noimg img{ display:none; }
+.bm.noimg .word{ display:flex; }
+.wm-hm{ font-family:var(--serif); font-style:italic; font-weight:600;
+  font-size:46px; letter-spacing:-.01em; line-height:1; }
+.wm-uq{ background:var(--ink); color:var(--paper); font-weight:600; text-align:center;
+  letter-spacing:.3em; font-size:13px; line-height:1.45; padding:13px 10px 13px 13px;
+  font-style:normal; }
+.wm-hs{ font-family:"Quicksand", var(--sans); font-weight:700; font-size:28px;
+  letter-spacing:.03em; line-height:1; align-items:center !important; }
+.wm-hs small{ font-weight:600; font-size:.46em; letter-spacing:.02em; color:var(--ink-60); align-self:flex-end; margin-bottom:.1em; }
+.hsk-mono{ height:1.72em; width:auto; margin-right:.32em; flex:none; }
+.hsk-txt{ display:flex; flex-direction:column; }
+.hsk-name{ display:flex; align-items:baseline; }
+.hsk-tag{ font-size:.34em; font-weight:600; letter-spacing:.06em; color:var(--ink-60); margin-top:.32em; }
+.brands{ display:flex; align-items:center; gap:clamp(26px, 4vw, 52px); margin-top:clamp(18px, 3vh, 36px);
+  padding-top:clamp(14px, 2.2vh, 24px); border-top:1px solid var(--ink-12); flex-wrap:wrap; }
+.brands .bm{ height:36px; margin:0; opacity:.8; transition:opacity .25s, transform .25s; }
+.brands .bm:hover{ opacity:1; transform:translateY(-3px); }
+.brands .wm-hm{ font-size:30px; }
+.brands .wm-uq{ font-size:9px; padding:8px 6px 8px 8px; letter-spacing:.26em; }
+.brands .wm-hs{ font-size:20px; }
+.brands .wm-hs small{ font-size:11px; }
+
+/* ---------- nút về đầu trang ---------- */
+#toTop{ position:fixed; right:26px; bottom:26px; z-index:39;
+  width:46px; height:46px; border-radius:50%; font-size:16px; line-height:1;
+  background:color-mix(in srgb, var(--paper) 85%, transparent); color:var(--ink);
+  border:1px solid var(--ink-30);
+  opacity:0; transform:translateY(14px); pointer-events:none;
+  transition:opacity .35s ease, transform .35s ease, background .25s, color .25s; }
+#toTop.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
+#toTop:hover{ background:var(--ink); color:var(--paper); }
+
+/* ---------- chi tiết kinh nghiệm (accordion) ---------- */
+.xp{ margin-top:clamp(14px, 2.2vh, 20px); }
+.xp-btn{ display:inline-flex; align-items:center; gap:10px; font-family:var(--sans);
+  font-size:10px; letter-spacing:.26em; color:var(--ink); background:none;
+  border:1px solid var(--ink-30); border-radius:999px; padding:9px 18px;
+  transition:background .25s, color .25s; }
+.xp-btn:hover{ background:var(--ink); color:var(--paper); }
+.xp-btn i{ font-style:normal; font-size:13px; line-height:1; }
+.xp-body{ height:0; overflow:hidden; }
+.xp-grid{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(14px, 2.5vw, 30px);
+  padding-top:clamp(12px, 2vh, 20px); }
+.xp-grid h4{ font-size:9.5px; letter-spacing:.3em; color:var(--ink-60); font-weight:600;
+  padding-bottom:9px; margin-bottom:3px; border-bottom:1px solid var(--ink-12); }
+.xp-grid li{ font-size:12.5px; line-height:1.55; color:var(--ink-60); padding:7px 0 7px 14px;
+  border-top:1px dotted var(--ink-12); position:relative; }
+.xp-grid li:first-child{ border-top:none; }
+.xp-grid li::before{ content:"·"; position:absolute; left:0; color:var(--ink); font-weight:600; }
+@media (max-width:760px){ .xp-grid{ grid-template-columns:1fr; } }
+
+/* ---------- thông báo bản mobile rút gọn ---------- */
+#pcNote{ display:none; position:fixed; left:50%; bottom:16px; transform:translateX(-50%);
+  z-index:46; max-width:92vw; align-items:center; gap:12px;
+  background:var(--ink); color:var(--paper); font-size:10.5px; letter-spacing:.06em;
+  line-height:1.45; padding:10px 14px; border-radius:14px; }
+#pcNote button{ background:none; border:none; color:var(--paper); font-size:13px;
+  padding:2px 4px; flex:none; }
+@media (max-width:760px){ #pcNote.show{ display:flex; } }
+
+/* ---------- thông báo màn hình hẹp ---------- */
+#sizeNote{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(16px);
+  z-index:45; background:var(--ink); color:var(--paper); font-size:11px; letter-spacing:.12em;
+  padding:11px 22px; border-radius:999px; opacity:0; pointer-events:none;
+  transition:opacity .4s ease, transform .4s ease; }
+#sizeNote.show{ opacity:.92; transform:translateX(-50%) translateY(0); }
+
+/* ---------- custom cursor ---------- */
+@media (pointer:fine){
+  body, a, button{ cursor:none; }
+  #cursor{ position:fixed; z-index:60; width:8px; height:8px; border-radius:50%;
+    background:var(--ink); pointer-events:none; top:0; left:0; transition:opacity .2s ease; }
+  #cursor.hide{ opacity:0; }
+  #ring{ position:fixed; z-index:60; width:38px; height:38px; border-radius:50%;
+    border:1px solid var(--ink-60); pointer-events:none; top:0; left:0;
+    transition:width .25s ease, height .25s ease, opacity .25s ease; }
+  #ring.hot{ width:70px; height:70px; opacity:.45; }
+}
+@media (pointer:coarse){ #cursor, #ring{ display:none; } }
+
+/* ---------- marquee ---------- */
+.marquee{ position:relative; z-index:10; overflow:hidden; padding:4.5vh 0;
+  border-top:1px solid var(--ink-12); border-bottom:1px solid var(--ink-12); }
+.marquee .track{ display:inline-flex; white-space:nowrap; will-change:transform; }
+.marquee .chunk{ font-family:var(--serif); font-style:italic; font-weight:300;
+  font-size:clamp(44px, 7.5vw, 108px); line-height:1.08; padding-right:5vw; }
+.marquee .chunk em{ color:transparent; -webkit-text-stroke:1px var(--ink-60); }
+
+@media (max-width:760px){
+  section{ padding:96px 22px 10vh; align-items:center; min-height:100svh; }
+  section.right{ justify-content:flex-start; }
+  section.center{ align-items:center; }
+  #hero{ align-items:center; }
+  .col{ max-width:100%; }
+  .bignum{ font-size:48vw; right:2vw !important; left:auto !important; top:4%; }
+  #topbar .logo em{ display:none; }
+  .marquee .chunk{ font-size:12.5vw; }
+  .brands{ gap:20px; }
+  #toTop{ right:16px; bottom:16px; width:42px; height:42px; }
+  #milestones{ right:9px; gap:10px; }
+  #milestones button{ width:6px; height:6px; }
+  #milestones button.on{ height:18px; }
+}
+@media (prefers-reduced-motion: reduce){
+  #hero .scrolldown::after{ animation:none; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="stage"></canvas>
+<nav id="milestones" aria-label="Sections"></nav>
+<div id="cursor"></div>
+<div id="ring"></div>
+<button id="toTop" aria-label="Về đầu trang" title="Về đầu trang">↑</button>
+<div id="pcNote"><span data-en="Light mobile version — open on a computer for the full 3D experience" data-vi="Bản rút gọn cho điện thoại — mở trên máy tính để xem trọn trải nghiệm 3D">Bản rút gọn cho điện thoại — mở trên máy tính để xem trọn trải nghiệm 3D</span><button id="pcNoteX" aria-label="Đóng">✕</button></div>
+<div id="sizeNote" data-en="Window is a bit narrow — widen your browser for the full layout" data-vi="Cửa sổ đang hẹp — mở rộng trình duyệt để xem trọn bố cục">Window is a bit narrow — widen your browser for the full layout</div>
+
+<header id="topbar">
+  <div class="logo">ĐÔNG NGUYỄN<em data-en="— retail operations" data-vi="— vận hành bán lẻ">— retail operations</em></div>
+  <div class="btns"><button id="langBtn">VI</button></div>
+</header>
+
+<main>
+
+<section id="hero">
+  <div class="kicker" data-en="RETAIL OPERATIONS — VISUAL MERCHANDISING — TRAINING" data-vi="VẬN HÀNH BÁN LẺ — TRƯNG BÀY — ĐÀO TẠO">RETAIL OPERATIONS — VISUAL MERCHANDISING — TRAINING</div>
+  <h1 class="split">portfolio.</h1>
+  <div class="name">Đông (Dennis) Nguyễn</div>
+  <div class="sub" data-en="HO CHI MINH CITY · 2017 — 2026" data-vi="TP. HỒ CHÍ MINH · 2017 — 2026">HO CHI MINH CITY · 2017 — 2026</div>
+  <div class="scrolldown" data-en="SCROLL" data-vi="CUỘN XUỐNG">SCROLL</div>
+</section>
+
+<section id="about">
+  <div class="bignum">01</div>
+  <div class="col">
+    <div class="lbl reveal" data-en="01 — PROFILE" data-vi="01 — HỒ SƠ">01 — PROFILE</div>
+    <h2 class="split" data-en="Built on the shop floor." data-vi="Trưởng thành từ sàn bán hàng.">Built on the shop floor.</h2>
+    <p class="reveal" data-en="Eight years in retail — from the fitting rooms at H&amp;M to nationwide operating systems at Hasaki.vn. I turn brand standards into daily routines that stores can actually run."
+       data-vi="Tám năm trong ngành bán lẻ — từ phòng thử đồ H&amp;M đến hệ thống vận hành toàn quốc tại Hasaki.vn. Tôi biến chuẩn thương hiệu thành quy trình mà cửa hàng có thể vận hành mỗi ngày.">Eight years in retail — from the fitting rooms at H&amp;M to nationwide operating systems at Hasaki.vn. I turn brand standards into daily routines that stores can actually run.</p>
+    <div class="stats reveal">
+      <div class="stat"><b><span class="cnt" data-to="8">0</span>+</b><span data-en="YEARS IN RETAIL" data-vi="NĂM BÁN LẺ">YEARS IN RETAIL</span></div>
+      <div class="stat"><b><span class="cnt" data-to="300">0</span>+</b><span data-en="STORES STANDARDIZED" data-vi="CỬA HÀNG CHUẨN HÓA">STORES STANDARDIZED</span></div>
+      <div class="stat"><b class="cnt" data-to="3">0</b><span data-en="GLOBAL BRANDS" data-vi="THƯƠNG HIỆU LỚN">GLOBAL BRANDS</span></div>
+    </div>
+    <div class="brands reveal">
+      <div class="bm"><img src="assets/hm.svg" alt="H&amp;M" onerror="this.parentElement.classList.add('noimg')"><span class="word wm-hm">H&amp;M</span></div>
+      <div class="bm"><img src="assets/uniqlo.svg" alt="UNIQLO" onerror="this.parentElement.classList.add('noimg')"><span class="word wm-uq">UNI<br>QLO</span></div>
+      <div class="bm"><img src="assets/hasaki.svg" alt="Hasaki" onerror="this.parentElement.classList.add('noimg')"><span class="word wm-hs"><svg class="hsk-mono" viewBox="0 0 100 100" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="50" cy="50" r="44" stroke-width="6.5"/><g stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"><path d="M45 31 H34 Q26 31 26 39 V44 Q26 51 33 51 H45"/><path d="M45 69 H34 Q26 69 26 61 V56 Q26 49 33 49 H45"/><path d="M55 31 H66 Q74 31 74 39 V44 Q74 51 67 51 H55"/><path d="M55 69 H66 Q74 69 74 61 V56 Q74 49 67 49 H55"/><path d="M42 50 H58"/></g></svg><span class="hsk-txt"><span class="hsk-name">HASAKI<small>.vn</small></span><span class="hsk-tag">Tiết Kiệm Hơn. Mọi Lúc.</span></span></span></div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee" id="mq1">
+  <div class="track">
+    <div class="chunk">visual merchandising — <em>planogram</em> — store operations — <em>POSM</em> — training — <em>SOP</em> —&nbsp;</div>
+    <div class="chunk" aria-hidden="true">visual merchandising — <em>planogram</em> — store operations — <em>POSM</em> — training — <em>SOP</em> —&nbsp;</div>
+  </div>
+</div>
+
+<section id="hm" class="right">
+  <div class="bignum">02</div>
+  <div class="col">
+    <div class="bm reveal"><img src="assets/hm.svg" alt="H&amp;M" onerror="this.parentElement.classList.add('noimg')"><span class="word wm-hm">H&amp;M</span></div>
+    <div class="lbl reveal" data-en="02 — FOUNDATIONS · 2017–2019" data-vi="02 — NỀN TẢNG · 2017–2019">02 — FOUNDATIONS · 2017–2019</div>
+    <h2 class="split" data-en="Service, learned by hand." data-vi="Dịch vụ, học từ thực tế.">Service, learned by hand.</h2>
+    <ul>
+      <li class="reveal" data-en="Full-floor customer service — sales floor, fitting room, cashier." data-vi="Phục vụ khách trọn sàn — khu trưng bày, phòng thử đồ, thu ngân.">Full-floor customer service — sales floor, fitting room, cashier.</li>
+      <li class="reveal" data-en="Trained and mentored new staff for faster, stronger onboarding." data-vi="Đào tạo, kèm cặp nhân viên mới — hội nhập nhanh và vững hơn.">Trained and mentored new staff for faster, stronger onboarding.</li>
+      <li class="reveal" data-en="Kept store presentation sharp, supporting visual consistency." data-vi="Giữ chuẩn trình bày cửa hàng, đảm bảo nhất quán hình ảnh.">Kept store presentation sharp, supporting visual consistency.</li>
+    </ul>
+    <span class="tag reveal">SALES ADVISOR</span>
+    <div class="xp reveal">
+      <button class="xp-btn"><span data-en="VIEW DETAILS" data-vi="XEM CHI TIẾT">VIEW DETAILS</span><i>+</i></button>
+      <div class="xp-body"><div class="xp-grid">
+        <div>
+          <h4 data-en="KEY RESPONSIBILITIES" data-vi="TRÁCH NHIỆM CHÍNH">KEY RESPONSIBILITIES</h4>
+          <ul>
+            <li data-en="Advised customers on product selection — features and benefits." data-vi="Tư vấn chọn sản phẩm — đặc tính và lợi ích cho khách.">Advised customers on product selection — features and benefits.</li>
+            <li data-en="Supported stockroom operations: replenishment, inventory organization." data-vi="Hỗ trợ kho: bổ sung hàng, sắp xếp tồn kho.">Supported stockroom operations: replenishment, inventory organization.</li>
+            <li data-en="Processed transactions and daily cash routines accurately." data-vi="Xử lý giao dịch và quy trình tiền mặt hằng ngày chính xác.">Processed transactions and daily cash routines accurately.</li>
+            <li data-en="Assisted layout adjustments to refresh non-VM areas." data-vi="Hỗ trợ điều chỉnh layout làm mới các khu vực ngoài VM.">Assisted layout adjustments to refresh non-VM areas.</li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-en="ACHIEVEMENTS" data-vi="THÀNH TỰU">ACHIEVEMENTS</h4>
+          <ul>
+            <li data-en="Consistent service excellence across all store areas." data-vi="Chất lượng phục vụ ổn định xuất sắc ở mọi khu vực.">Consistent service excellence across all store areas.</li>
+            <li data-en="Trusted to support daily operations end-to-end." data-vi="Được tin tưởng hỗ trợ vận hành hằng ngày trọn vòng.">Trusted to support daily operations end-to-end.</li>
+            <li data-en="Improved onboarding efficiency through mentoring." data-vi="Nâng hiệu quả hội nhập nhờ kèm cặp nhân viên mới.">Improved onboarding efficiency through mentoring.</li>
+          </ul>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="uq">
+  <div class="bignum">03</div>
+  <div class="col">
+    <div class="bm reveal"><img src="assets/uniqlo.svg" alt="UNIQLO" onerror="this.parentElement.classList.add('noimg')"><span class="word wm-uq">UNI<br>QLO</span></div>
+    <div class="lbl reveal" data-en="03 — THE CRAFT · 2019–2024" data-vi="03 — TAY NGHỀ · 2019–2024">03 — THE CRAFT · 2019–2024</div>
+    <h2 class="split" data-en="Visual merchandising, A-Rank." data-vi="Trưng bày đạt chuẩn A-Rank.">Visual merchandising, A-Rank.</h2>
+    <ul>
+      <li class="reveal" data-en="A-Rank nationwide ×2 for VM execution; “Best Styling” award — UV Protection campaign." data-vi="2 lần A-Rank toàn quốc về thực thi VM; giải “Best Styling” — chiến dịch UV Protection.">A-Rank nationwide ×2 for VM execution; “Best Styling” award — UV Protection campaign.</li>
+      <li class="reveal" data-en="Top 3 stores nationwide for Uniqlo U, Marni, Marimekko, JW Anderson launches." data-vi="Top 3 cửa hàng toàn quốc khi ra mắt Uniqlo U, Marni, Marimekko, JW Anderson.">Top 3 stores nationwide for Uniqlo U, Marni, Marimekko, JW Anderson launches.</li>
+      <li class="reveal" data-en="Daily floor operations, man-hour planning, global VM standards." data-vi="Vận hành sàn hằng ngày, hoạch định man-hour, chuẩn VM toàn cầu.">Daily floor operations, man-hour planning, global VM standards.</li>
+      <li class="reveal" data-en="Mentored 3 team members to Advanced Professional level." data-vi="Kèm cặp 3 nhân viên thăng cấp Advanced Professional.">Mentored 3 team members to Advanced Professional level.</li>
+    </ul>
+    <span class="tag reveal">SALES FLOOR LEADER &amp; VMD LEADER</span>
+    <div class="xp reveal">
+      <button class="xp-btn"><span data-en="VIEW DETAILS" data-vi="XEM CHI TIẾT">VIEW DETAILS</span><i>+</i></button>
+      <div class="xp-body"><div class="xp-grid">
+        <div>
+          <h4 data-en="KEY RESPONSIBILITIES" data-vi="TRÁCH NHIỆM CHÍNH">KEY RESPONSIBILITIES</h4>
+          <ul>
+            <li data-en="Orchestrated daily operations: workforce planning, man-hour allocation." data-vi="Điều phối vận hành hằng ngày: hoạch định nhân lực, phân bổ man-hour.">Orchestrated daily operations: workforce planning, man-hour allocation.</li>
+            <li data-en="Directed in-store VM aligned with global standards and seasonal campaigns." data-vi="Chỉ đạo VM trong cửa hàng theo chuẩn toàn cầu và chiến dịch mùa.">Directed in-store VM aligned with global standards and seasonal campaigns.</li>
+            <li data-en="Analyzed real-time sales data for push-sale and product placement." data-vi="Phân tích dữ liệu bán theo thời gian thực để push-sale và sắp xếp sản phẩm.">Analyzed real-time sales data for push-sale and product placement.</li>
+            <li data-en="Reallocated manpower across high-traffic zones at peak hours." data-vi="Tái phân bổ nhân lực các khu đông khách giờ cao điểm.">Reallocated manpower across high-traffic zones at peak hours.</li>
+            <li data-en="Led weekly VM updates for major product launches — 100% signage accuracy." data-vi="Dẫn dắt cập nhật VM hằng tuần cho các đợt ra mắt — chính xác 100% signage.">Led weekly VM updates for major product launches — 100% signage accuracy.</li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-en="ACHIEVEMENTS" data-vi="THÀNH TỰU">ACHIEVEMENTS</h4>
+          <ul>
+            <li data-en="A-Rank nationwide ×2 for VM execution and store standards." data-vi="2 lần A-Rank toàn quốc về thực thi VM và chuẩn cửa hàng.">A-Rank nationwide ×2 for VM execution and store standards.</li>
+            <li data-en="“Best Styling” award — nationwide UV Protection campaign." data-vi="Giải “Best Styling” — chiến dịch UV Protection toàn quốc.">“Best Styling” award — nationwide UV Protection campaign.</li>
+            <li data-en="Top 3 stores nationwide: Uniqlo U, Marni, Marimekko, JW Anderson." data-vi="Top 3 cửa hàng toàn quốc: Uniqlo U, Marni, Marimekko, JW Anderson.">Top 3 stores nationwide: Uniqlo U, Marni, Marimekko, JW Anderson.</li>
+            <li data-en="Mentored and promoted 3 members to Advanced Professional." data-vi="Kèm cặp và thăng cấp 3 nhân viên lên Advanced Professional.">Mentored and promoted 3 members to Advanced Professional.</li>
+            <li data-en="Bridged VM aesthetics with data-driven sell-through insights." data-vi="Kết nối thẩm mỹ VM với dữ liệu sell-through.">Bridged VM aesthetics with data-driven sell-through insights.</li>
+          </ul>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee" id="mq2">
+  <div class="track">
+    <div class="chunk">A-rank ×2 — <em>best styling</em> — top 3 launches — <em>uniqlo u</em> — marni — <em>marimekko</em> — JW anderson —&nbsp;</div>
+    <div class="chunk" aria-hidden="true">A-rank ×2 — <em>best styling</em> — top 3 launches — <em>uniqlo u</em> — marni — <em>marimekko</em> — JW anderson —&nbsp;</div>
+  </div>
+</div>
+
+<section id="hs" class="right">
+  <div class="bignum">04</div>
+  <div class="col">
+    <div class="bm reveal"><img src="assets/hasaki.svg" alt="Hasaki" onerror="this.parentElement.classList.add('noimg')"><span class="word wm-hs"><svg class="hsk-mono" viewBox="0 0 100 100" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="50" cy="50" r="44" stroke-width="6.5"/><g stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"><path d="M45 31 H34 Q26 31 26 39 V44 Q26 51 33 51 H45"/><path d="M45 69 H34 Q26 69 26 61 V56 Q26 49 33 49 H45"/><path d="M55 31 H66 Q74 31 74 39 V44 Q74 51 67 51 H55"/><path d="M55 69 H66 Q74 69 74 61 V56 Q74 49 67 49 H55"/><path d="M42 50 H58"/></g></svg><span class="hsk-txt"><span class="hsk-name">HASAKI<small>.vn</small></span><span class="hsk-tag">Tiết Kiệm Hơn. Mọi Lúc.</span></span></span></div>
+    <div class="lbl reveal" data-en="04 — THE SYSTEM · 2024–2026" data-vi="04 — HỆ THỐNG · 2024–2026">04 — THE SYSTEM · 2024–2026</div>
+    <h2 class="split" data-en="One planogram, 300+ stores." data-vi="Một planogram, hơn 300 cửa hàng.">One planogram, 300+ stores.</h2>
+    <ul>
+      <li class="reveal" data-en="Led nationwide planogram rollout &amp; training — 300+ stores, Vietnam and international." data-vi="Dẫn dắt triển khai &amp; đào tạo planogram — hơn 300 cửa hàng, trong nước và quốc tế.">Led nationwide planogram rollout &amp; training — 300+ stores, Vietnam and international.</li>
+      <li class="reveal" data-en="Cut cross-department campaign setup time to under one week." data-vi="Rút thời gian setup chiến dịch liên phòng ban xuống dưới 1 tuần.">Cut cross-department campaign setup time to under one week.</li>
+      <li class="reveal" data-en="+50% faster display-guideline releases with ODM teams." data-vi="Tăng 50% tốc độ phát hành display guideline cùng đội ODM.">+50% faster display-guideline releases with ODM teams.</li>
+      <li class="reveal" data-en="Built SOPs for new business units; managed the POSM lifecycle end-to-end." data-vi="Xây SOP cho đơn vị kinh doanh mới; quản lý vòng đời POSM đầu-cuối.">Built SOPs for new business units; managed the POSM lifecycle end-to-end.</li>
+    </ul>
+    <span class="tag reveal">SENIOR RETAIL OPERATIONS EXECUTIVE</span>
+    <div class="xp reveal">
+      <button class="xp-btn"><span data-en="VIEW DETAILS" data-vi="XEM CHI TIẾT">VIEW DETAILS</span><i>+</i></button>
+      <div class="xp-body"><div class="xp-grid">
+        <div>
+          <h4 data-en="KEY RESPONSIBILITIES" data-vi="TRÁCH NHIỆM CHÍNH">KEY RESPONSIBILITIES</h4>
+          <ul>
+            <li data-en="Developed SOPs for new business units — from proposal to nationwide rollout." data-vi="Xây dựng SOP cho đơn vị kinh doanh mới — từ đề xuất đến triển khai toàn quốc.">Developed SOPs for new business units — from proposal to nationwide rollout.</li>
+            <li data-en="Supervised VM &amp; store operations; regular audits on VM, service, performance." data-vi="Giám sát VM &amp; vận hành; audit định kỳ về VM, dịch vụ, hiệu suất.">Supervised VM &amp; store operations; regular audits on VM, service, performance.</li>
+            <li data-en="Strategic bridge between Marketing and Store teams for campaigns/events." data-vi="Cầu nối chiến lược Marketing — cửa hàng cho chiến dịch/sự kiện.">Strategic bridge between Marketing and Store teams for campaigns/events.</li>
+            <li data-en="Managed POSM lifecycle end-to-end: survey, procurement, install/removal tracking." data-vi="Quản lý vòng đời POSM đầu-cuối: khảo sát, mua sắm, theo dõi lắp/tháo.">Managed POSM lifecycle end-to-end: survey, procurement, install/removal tracking.</li>
+            <li data-en="Trained Store/Area Managers on display standards and digital planogram tools." data-vi="Đào tạo SM/AM về chuẩn trưng bày và công cụ planogram số.">Trained Store/Area Managers on display standards and digital planogram tools.</li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-en="ACHIEVEMENTS" data-vi="THÀNH TỰU">ACHIEVEMENTS</h4>
+          <ul>
+            <li data-en="Nationwide planogram rollout &amp; training — 300+ stores, VN and international." data-vi="Triển khai &amp; đào tạo planogram toàn quốc — hơn 300 cửa hàng, VN và quốc tế.">Nationwide planogram rollout &amp; training — 300+ stores, VN and international.</li>
+            <li data-en="Campaign setup time cut to under one week across departments." data-vi="Rút thời gian setup chiến dịch liên phòng ban xuống dưới 1 tuần.">Campaign setup time cut to under one week across departments.</li>
+            <li data-en="+50% faster display-guideline releases with ODM teams." data-vi="Tăng 50% tốc độ phát hành display guideline cùng đội ODM.">+50% faster display-guideline releases with ODM teams.</li>
+            <li data-en="Resolved system bottlenecks with Tech — better platform stability for stores." data-vi="Cùng đội Tech xử lý nghẽn hệ thống — nền tảng ổn định hơn cho cửa hàng.">Resolved system bottlenecks with Tech — better platform stability for stores.</li>
+          </ul>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="center">
+  <div class="col">
+    <div class="lbl reveal" style="justify-content:center" data-en="05 — NEXT CHAPTER" data-vi="05 — CHƯƠNG TIẾP THEO">05 — NEXT CHAPTER</div>
+    <h2 class="split" data-en="Open to work." data-vi="Sẵn sàng cho hành trình mới.">Open to work.</h2>
+    <p class="reveal" style="margin:0 auto" data-en="Ho Chi Minh City · On-site / Hybrid" data-vi="TP. Hồ Chí Minh · On-site / Hybrid">Ho Chi Minh City · On-site / Hybrid</p>
+    <div class="links reveal">
+      <a href="https://www.linkedin.com/in/shidong95/" target="_blank" rel="noopener">LINKEDIN</a>
+      <a href="mailto:shidong95@gmail.com">EMAIL</a>
+    </div>
+  </div>
+  <footer data-en="CREATED WITH AI ASSISTANCE BY DENNIS NGUYỄN — 2026" data-vi="TẠO VỚI SỰ TRỢ GIÚP TỪ AI BỞI DENNIS NGUYỄN — 2026">CREATED WITH AI ASSISTANCE BY DENNIS NGUYỄN — 2026</footer>
+</section>
+
+</main>
+
+<script type="module">
+import * as THREE from 'three';
+gsap.registerPlugin(ScrollTrigger);
+
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const INK = 0x161410;
+
+/* ============================================================
+   THREE.JS — monochrome wireframe world.
+   Camera Y follows native scroll; each section owns a 3D group
+   whose world position is synced to the section's document position.
+   ============================================================ */
+const canvas = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
+camera.position.z = 10;
+
+const lineMat   = new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.72 });
+const lineSoft  = new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.34 });
+const dotMat    = new THREE.PointsMaterial({ color: INK, size: 0.045, transparent: true, opacity: 0.65 });
+
+const edges = g => new THREE.LineSegments(new THREE.EdgesGeometry(g), lineMat);
+const wires = g => new THREE.LineSegments(new THREE.WireframeGeometry(g), lineSoft);
+
+/* ---------- per-section set pieces ---------- */
+const stage = {}; // groups keyed by section id
+
+/* ---------- xưởng tạo hình wireframe: thời trang & mỹ phẩm ---------- */
+function E(geo, soft = false, th = 10) {
+  return new THREE.LineSegments(new THREE.EdgesGeometry(geo, th), soft ? lineSoft : lineMat);
+}
+const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide });
+function shirtMesh(soft = false) { // áo thun
+  const s = new THREE.Shape();
+  s.moveTo(-0.2, 0.6); s.quadraticCurveTo(0, 0.5, 0.2, 0.6);
+  s.lineTo(0.58, 0.48); s.lineTo(0.8, 0.1); s.lineTo(0.5, -0.02);
+  s.lineTo(0.46, -0.62); s.lineTo(-0.46, -0.62); s.lineTo(-0.5, -0.02);
+  s.lineTo(-0.8, 0.1); s.lineTo(-0.58, 0.48); s.closePath();
+  const g = new THREE.Group();
+  g.add(E(new THREE.ShapeGeometry(s, 6), soft, 1));
+  const hit = new THREE.Mesh(new THREE.ShapeGeometry(s, 2), hitMat); // mặt cảm ứng vô hình
+  hit.userData.skipClone = true;
+  g.add(hit);
+  return g;
+}
+function hangerMesh(soft = false) { // móc áo
+  const g = new THREE.Group();
+  const pts = [];
+  for (let i = 0; i <= 18; i++) { const a = -0.4 + i / 18 * Math.PI * 1.35; pts.push(new THREE.Vector3(Math.cos(a) * 0.13, 0.6 + Math.sin(a) * 0.13, 0)); }
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), soft ? lineSoft : lineMat));
+  g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-0.85, 0, 0), new THREE.Vector3(0.85, 0, 0), new THREE.Vector3(0, 0.5, 0)
+  ]), soft ? lineSoft : lineMat));
+  return g;
+}
+function tubeLines(rB, rT, y0, y1, slant = 0, soft = false) { // ống tròn mượt: 2 vành + 2 nét dọc; slant = đầu vát chéo
+  const m = soft ? lineSoft : lineMat;
+  const g = new THREE.Group();
+  const circ = (r, y, sl) => {
+    const pts = [];
+    for (let i = 0; i <= 40; i++) {
+      const a = i / 40 * Math.PI * 2;
+      pts.push(new THREE.Vector3(Math.cos(a) * r, y + (sl ? (Math.cos(a) + 1) * 0.5 * sl : 0), Math.sin(a) * r));
+    }
+    g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), m));
+  };
+  circ(rB, y0, 0);
+  circ(rT, y1, slant);
+  [[1, slant], [-1, 0]].forEach(([sgn, sl]) => {
+    g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(sgn * rB, y0, 0), new THREE.Vector3(sgn * rT, y1 + sl, 0)]), m));
+  });
+  return g;
+}
+function arcLine(r, y, h, soft = false) { // vòm 1 nét: nắp hũ kem, bầu bóp dropper
+  const pts = [];
+  for (let i = 0; i <= 24; i++) {
+    const a = i / 24 * Math.PI;
+    pts.push(new THREE.Vector3(Math.cos(a) * r, y + Math.sin(a) * h, 0));
+  }
+  return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), soft ? lineSoft : lineMat);
+}
+function mannequinMesh(full = true, soft = false) { // ma-nơ-canh tối giản: 2 nét lượn + vành hông + vòm vai + núm cổ
+  const g = new THREE.Group();
+  const m = soft ? lineSoft : lineMat;
+  const line = pts => g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), m));
+  const rim = (r, y) => { const p = []; for (let i = 0; i <= 40; i++) { const a = i / 40 * Math.PI * 2;
+    p.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r)); } line(p); };
+  [1, -1].forEach(sg => line([[0.42, 1.1], [0.40, 1.34], [0.30, 1.74], [0.35, 2.05], [0.47, 2.32], [0.50, 2.5]]
+    .map(([r, y]) => new THREE.Vector3(sg * r, y, 0))));   // 2 nét lượn hông-eo-vai
+  rim(0.42, 1.1);                                          // vành hông
+  g.add(arcLine(0.5, 2.5, 0.14, soft));                    // vòm vai
+  g.add(arcLine(0.085, 2.64, 0.13, soft));                 // núm cổ
+  const hit = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.5), hitMat); // mặt cảm ứng vô hình
+  hit.position.y = 1.8; hit.userData.skipClone = true;
+  g.add(hit);
+  if (full) {
+    line([new THREE.Vector3(0, 0.02, 0), new THREE.Vector3(0, 1.1, 0)]); // trụ 1 nét
+    rim(0.44, 0.02);                                       // đế 1 elip
+  }
+  return g;
+}
+function bottleMesh(type, soft = false) { // chai lọ mỹ phẩm — tối giản 6 cạnh, 2 khối
+  const g = new THREE.Group();
+  if (type === 0) {        // serum — chai dropper: thân + cổ + bầu bóp
+    g.add(tubeLines(0.17, 0.15, 0, 0.5, 0, soft));
+    g.add(tubeLines(0.06, 0.06, 0.5, 0.64, 0, soft));
+    g.add(arcLine(0.06, 0.64, 0.055, soft));
+  } else if (type === 1) { // kem dưỡng — hũ lùn rộng, nắp vòm
+    g.add(tubeLines(0.24, 0.26, 0, 0.22, 0, soft));
+    g.add(arcLine(0.26, 0.22, 0.13, soft));
+  } else if (type === 2) { // chai xịt/pump cao
+    g.add(tubeLines(0.14, 0.14, 0, 0.5, 0, soft));
+    g.add(tubeLines(0.035, 0.035, 0.5, 0.7, 0, soft));
+  } else {                 // son môi — đầu vát chéo
+    g.add(tubeLines(0.1, 0.095, 0, 0.32, 0, soft));
+    g.add(tubeLines(0.07, 0.07, 0.32, 0.44, 0.13, soft));
+  }
+  return g;
+}
+
+/* hero — large wireframe icosahedron + orbiting dot ring */
+{
+  const g = new THREE.Group();
+  // hai cánh quanh tiêu đề: trái thời trang, phải mỹ phẩm
+  const items = [];
+  const add = (obj, x, y, sc, seed) => {
+    obj.position.set(x, y, 0); obj.scale.setScalar(sc);
+    obj.userData.seed = seed; obj.userData.x0 = x; obj.userData.y0 = y; obj.userData.s0 = sc;
+    items.push(obj); g.add(obj);
+  };
+  const fashion = new THREE.Group();
+  const hgH = hangerMesh(); hgH.scale.setScalar(0.9); hgH.position.y = 0.85; fashion.add(hgH);
+  const shH = shirtMesh(); shH.scale.setScalar(1.6); fashion.add(shH);
+  add(fashion, -5.7, 0.4, 1.25, 1.3);
+  add(bottleMesh(3), -4.0, -2.4, 2.5, 2.1);  // son môi
+  add(bottleMesh(0), 4.4, -1.5, 2.6, 3.2);   // serum dropper
+  add(bottleMesh(1), 6.4, -2.0, 2.6, 4.3);   // hũ kem
+  const fl = new THREE.Group();               // chai nước hoa nhỏ
+  fl.add(tubeLines(0.5, 0.38, 0, 1.1));
+  fl.add(tubeLines(0.2, 0.2, 1.1, 1.44));
+  add(fl, 5.5, 0.5, 1.5, 5.1);
+  // ánh kim tuyến lấp lánh quanh tiêu đề — chất beauty, không cắt ngang chữ
+  const sparkles = [];
+  const mkSpark = (x, y, sc, seed) => {
+    const sp = new THREE.Group();
+    sp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, 1, 0)]), lineSoft));
+    sp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-0.7, 0, 0), new THREE.Vector3(0.7, 0, 0)]), lineSoft));
+    sp.position.set(x, y, -0.5); sp.userData = { seed, base: sc, x0: x, y0: y };
+    sparkles.push(sp); g.add(sp);
+  };
+  mkSpark(-7.3, 2.7, 0.30, 0); mkSpark(-2.6, 3.1, 0.18, 2); mkSpark(2.9, 3.3, 0.26, 4);
+  mkSpark(7.5, 2.1, 0.22, 1); mkSpark(-6.5, -3.0, 0.22, 3); mkSpark(7.2, -0.9, 0.16, 5);
+  g.userData.layout = [...items, ...sparkles];
+  g.userData.update = (t, p, spin) => {
+    items.forEach(o => {
+      o.position.y += Math.sin(t * 0.5 + o.userData.seed) * 0.0012;
+      o.rotation.y = Math.sin(t * 0.22 + o.userData.seed) * 0.28 + spin * 0.6;
+    });
+    sparkles.forEach(sp => {
+      const tw = 0.7 + 0.4 * Math.sin(t * 1.3 + sp.userData.seed * 1.9);
+      sp.scale.setScalar(sp.userData.base * tw);
+      sp.rotation.z = Math.sin(t * 0.2 + sp.userData.seed) * 0.2;
+    });
+    g.rotation.z = p * 0.5;
+    g.scale.setScalar((g.userData.baseS || 1) * (1 - p * 0.3));
+  };
+  g.position.x = 0; g.position.z = -2.5;
+  stage.hero = g; scene.add(g);
+}
+
+/* about — móc áo lơ lửng + thỏi son */
+{
+  const g = new THREE.Group();
+  const items = [];
+  [[-0.8, 0.7, 0, 1.25], [0.8, -0.5, -0.8, 0.95], [0.1, 1.7, -1.6, 1.1]].forEach(([x, y, z, sc], i) => {
+    const h = hangerMesh(i === 2);
+    h.position.set(x, y, z); h.scale.setScalar(sc); h.userData.seed = i * 2.1;
+    items.push(h); g.add(h);
+  });
+  const lp = bottleMesh(3); lp.scale.setScalar(2.2); lp.position.set(-1.5, -2.2, -0.6); lp.userData.seed = 7;
+  items.push(lp); g.add(lp);
+  g.userData.update = t => {
+    items.forEach(c => {
+      c.position.y += Math.sin(t * 0.5 + c.userData.seed) * 0.0012;
+      c.rotation.y = Math.sin(t * 0.22 + c.userData.seed) * 0.28;
+    });
+  };
+  g.scale.setScalar(1.4);
+  stage.about = g; scene.add(g);
+}
+
+/* hm — áo thun bay lơ lửng + hũ kem */
+{
+  const g = new THREE.Group();
+  const items = [];
+  // bố cục so le có chủ đích — không chồng chéo
+  [[-1.15, 2.35, -0.4, 1.30, -0.07, false],
+   [ 1.20, 1.30, -1.2, 1.05,  0.10, true ],
+   [-0.95, -0.20, 0.0, 1.50,  0.04, false],
+   [ 1.30, -1.85, -0.9, 1.15, -0.09, true ],
+   [-1.15, -3.05, -1.5, 0.95,  0.08, false]].forEach(([x, y, z, sc, rz, soft], i) => {
+    const sh = shirtMesh(soft);
+    sh.position.set(x, y, z); sh.scale.setScalar(sc); sh.rotation.z = rz;
+    sh.userData.seed = i * 1.7;
+    items.push(sh); g.add(sh);
+  });
+  [[2.2, -0.15, -0.4, 1.45], [0.65, -3.35, -0.2, 1.45]].forEach(([x, y, z, sc], i) => {
+    const jr = bottleMesh(1, true);
+    jr.position.set(x, y, z); jr.scale.setScalar(sc);
+    jr.userData.seed = 4 + i * 2.3;
+    items.push(jr); g.add(jr);
+  });
+  const bust = mannequinMesh(false, true); // bust ma-nơ-canh lơ lửng
+  bust.position.set(-2.95, 0.05, -0.3); bust.scale.setScalar(0.85);
+  bust.userData.seed = 8.5;
+  items.push(bust); g.add(bust);
+  g.userData.update = t => {
+    items.forEach(el => {
+      el.rotation.y = Math.sin(t * 0.3 + el.userData.seed) * 0.18;
+    });
+  };
+  g.scale.setScalar(1.4);
+  stage.hm = g; scene.add(g);
+}
+
+/* uq — giàn treo quần áo: áo xoay lần lượt theo scroll */
+{
+  const g = new THREE.Group();
+  const railY = 1.7;
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-3.3, railY, 0), new THREE.Vector3(1.9, railY, 0)]), lineMat));
+  [-3.1, 1.7].forEach(x => {
+    g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(x, railY, 0), new THREE.Vector3(x, -1.9, 0)]), lineMat));
+  });
+  // đường sàn + chồng áo gấp lấp khoảng trống bên dưới
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-3.7, -1.9, 0), new THREE.Vector3(3.9, -1.9, 0)]), lineSoft));
+  const mq = mannequinMesh(true, false); // ma-nơ-canh trong lòng bố cục — không văng mép, không chạm chữ
+  mq.position.set(2.95, -1.9, 0.2); mq.scale.setScalar(1.12);
+  g.add(mq);
+  const items = [];
+  for (let i = 0; i < 4; i++) {
+    const it = new THREE.Group();
+    it.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -0.34, 0)]), lineMat)); // móc chỉ
+    const sh = shirtMesh(); sh.scale.setScalar(1.05); sh.position.y = -0.97; it.add(sh);
+    it.position.set(-2.55 + i * 1.15, railY, (i % 2) * 0.08);
+    it.userData.i = i;
+    items.push(it); g.add(it);
+  }
+  g.userData.update = (t, p) => {
+    items.forEach(it => {
+      const d = it.userData.i / 4;
+      const local = THREE.MathUtils.clamp((p - d * 0.45) * 2.2, 0, 1);
+      it.rotation.y = local * Math.PI * 0.18 + Math.sin(t * 0.3 + it.userData.i * 2) * 0.05;
+    });
+  };
+  g.scale.setScalar(1.55);
+  stage.uq = g; scene.add(g);
+}
+
+/* hs — planogram mỹ phẩm: chai lọ bay hỗn loạn rồi xếp ngay ngắn lên kệ */
+const plano = (() => {
+  const g = new THREE.Group();
+  const frameMat2 = lineMat.clone(); // không dùng chung material để chỉnh opacity riêng
+  const COLS = 6, ROWS = 4, SPX = 0.66, SPY = 0.88, BASE = -1.6;
+  const items = [];
+  for (let i = 0; i < COLS * ROWS; i++) {
+    const ix = i % COLS, iy = (i / COLS) | 0;
+    const b = bottleMesh(i % 4);
+    b.userData = {
+      target: new THREE.Vector3((ix - (COLS - 1) / 2) * SPX, BASE + iy * SPY, 0),
+      scatter: new THREE.Vector3(
+        (ix - (COLS - 1) / 2) * SPX + (Math.random() - 0.5) * 0.45,
+        BASE + iy * SPY + 0.5 + Math.random() * 0.6,
+        (Math.random() - 0.5) * 0.5),
+      seed: Math.random()
+    };
+    items.push(b); g.add(b);
+  }
+  // khung kệ + các tầng kệ
+  const W = COLS * SPX + 0.7, H = ROWS * SPY + 0.55;
+  const frame = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-W / 2, BASE - 0.35, 0), new THREE.Vector3(W / 2, BASE - 0.35, 0),
+    new THREE.Vector3(W / 2, BASE - 0.35 + H, 0), new THREE.Vector3(-W / 2, BASE - 0.35 + H, 0)]), frameMat2);
+  frame.userData.skipClone = true;
+  g.add(frame);
+  for (let r = 0; r < ROWS; r++) {
+    const y = BASE + r * SPY - 0.06;
+    const shelf = new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-W / 2, y, 0), new THREE.Vector3(W / 2, y, 0)]), frameMat2);
+    shelf.userData.skipClone = true;
+    g.add(shelf);
+  }
+  g.userData.progress = 0;
+  g.userData.update = t => {
+    const p = g.userData.progress;
+    items.forEach(b => {
+      const d = b.userData;
+      const m = THREE.MathUtils.smoothstep(p, d.seed * 0.5, d.seed * 0.5 + 0.5);
+      const e = m * m * (3 - 2 * m);
+      b.position.lerpVectors(d.scatter, d.target, e);
+      b.rotation.z = (1 - e) * (d.seed - 0.5) * 0.45; // chỉ nghiêng nhẹ rồi thẳng lại
+    });
+    frameMat2.opacity = 0.13 + p * 0.32;
+  };
+  g.scale.setScalar(1.35);
+  stage.hs = g; scene.add(g);
+  return g;
+})();
+
+/* contact — thỏi son lớn xoay chậm sau chữ */
+{
+  const g = new THREE.Group();
+  // cùng ngôn ngữ với hero: hai cánh vật thể nhỏ + kim tuyến, chữ giữa thoáng
+  const items = [];
+  const add = (obj, x, y, sc, seed) => {
+    obj.position.set(x, y, 0); obj.scale.setScalar(sc);
+    obj.userData.seed = seed; obj.userData.x0 = x; obj.userData.y0 = y; obj.userData.s0 = sc;
+    items.push(obj); g.add(obj);
+  };
+  const fashion2 = new THREE.Group();
+  const hg2 = hangerMesh(); hg2.scale.setScalar(0.9); hg2.position.y = 0.85; fashion2.add(hg2);
+  const sh2 = shirtMesh(); sh2.scale.setScalar(1.6); fashion2.add(sh2);
+  add(fashion2, -5.8, 0.3, 1.2, 1.1);
+  add(bottleMesh(3), -4.1, -2.5, 2.5, 2.4);  // son môi
+  add(bottleMesh(0), 4.5, -1.6, 2.6, 3.6);   // serum dropper
+  add(bottleMesh(1), 6.5, -2.1, 2.6, 4.7);   // hũ kem
+  const fl2 = new THREE.Group();              // chai nước hoa nhỏ
+  fl2.add(tubeLines(0.5, 0.38, 0, 1.1));
+  fl2.add(tubeLines(0.2, 0.2, 1.1, 1.44));
+  add(fl2, 5.6, 0.4, 1.5, 5.6);
+  const sparkles2 = [];
+  const mkSpark2 = (x, y, sc, seed) => {
+    const sp = new THREE.Group();
+    sp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, 1, 0)]), lineSoft));
+    sp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-0.7, 0, 0), new THREE.Vector3(0.7, 0, 0)]), lineSoft));
+    sp.position.set(x, y, -0.5); sp.userData = { seed, base: sc, x0: x, y0: y };
+    sparkles2.push(sp); g.add(sp);
+  };
+  mkSpark2(-7.0, 2.6, 0.26, 0.5); mkSpark2(-2.4, 2.9, 0.17, 2.5);
+  mkSpark2(2.7, 3.1, 0.23, 4.5); mkSpark2(7.1, 1.9, 0.2, 1.5);
+  g.userData.layout = [...items, ...sparkles2];
+  g.userData.update = (t, p, spin) => {
+    items.forEach(o => {
+      o.position.y += Math.sin(t * 0.5 + o.userData.seed) * 0.0012;
+      o.rotation.y = Math.sin(t * 0.22 + o.userData.seed) * 0.28 + spin * 0.6;
+    });
+    sparkles2.forEach(sp => {
+      const tw = 0.7 + 0.4 * Math.sin(t * 1.3 + sp.userData.seed * 1.9);
+      sp.scale.setScalar(sp.userData.base * tw);
+      sp.rotation.z = Math.sin(t * 0.2 + sp.userData.seed) * 0.2;
+    });
+  };
+  g.position.z = -2.5;
+  stage.contact = g; scene.add(g);
+}
+
+/* global dust dots spread over the whole journey (y set in sync()) */
+const dustGeo = new THREE.BufferGeometry();
+const DUST_N = 350;
+const dustArr = new Float32Array(DUST_N * 3);
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustArr, 3));
+const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({
+  color: INK, size: 0.022, transparent: true, opacity: 0.35 }));
+scene.add(dust);
+
+/* ---------- sparkle khi rê chuột vào vật thể 3D ---------- */
+const sparkTex = (() => { // ngôi sao 4 cánh lấp lánh ✦ — nét mực sắc
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const x = c.getContext('2d');
+  x.fillStyle = '#161410';
+  x.beginPath();
+  x.moveTo(64, 6);
+  x.quadraticCurveTo(70, 58, 122, 64);
+  x.quadraticCurveTo(70, 70, 64, 122);
+  x.quadraticCurveTo(58, 70, 6, 64);
+  x.quadraticCurveTo(58, 58, 64, 6);
+  x.closePath(); x.fill();
+  return new THREE.CanvasTexture(c);
+})();
+const sparkPool = [];
+for (let i = 0; i < 16; i++) {
+  const m = new THREE.SpriteMaterial({ map: sparkTex, transparent: true, opacity: 0, depthWrite: false });
+  const sp = new THREE.Sprite(m);
+  sp.visible = false; sp.userData = { mat: m, t: 9e9, life: 0.6, base: 0.15 };
+  scene.add(sp); sparkPool.push(sp);
+}
+let sparkIdx = 0, lastRay = 0;
+const raycaster = new THREE.Raycaster();
+raycaster.params.Line = { threshold: 0.3 };
+raycaster.params.Points = { threshold: 0.3 };
+
+/* ---------- sync 3D world to document layout ---------- */
+const SECTIONS = ['hero', 'about', 'hm', 'uq', 'hs', 'contact'];
+let SCALE = 1, worldH = 0, VISH = 9.3;
+
+/* mỗi cụm material riêng để fade độc lập theo khoảng cách section */
+const fadeMats = {};
+for (const id of SECTIONS) {
+  const DIM = { hs: 0.58 }; // kệ Hasaki nhiều nét — giảm đậm cho cân
+  fadeMats[id] = [];
+  stage[id].traverse(o => {
+    if (o.material && !o.userData.skipClone) {
+      o.material = o.material.clone();
+      o.material.userData.base = o.material.opacity * (DIM[id] || 1);
+      fadeMats[id].push(o.material);
+    }
+  });
+}
+function sync() {
+  const vh = innerHeight;
+  const visible = 2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); // world units per viewport height
+  SCALE = visible / vh; VISH = visible;
+  SECTIONS.forEach(id => {
+    const el = document.getElementById(id);
+    const y = el.offsetTop + el.offsetHeight / 2;
+    stage[id].position.y = -y * SCALE + (stage[id].userData.yOff || 0);
+  });
+  worldH = document.documentElement.scrollHeight * SCALE;
+  // respread dust through the whole world
+  for (let i = 0; i < DUST_N; i++) {
+    dustArr[i * 3] = (Math.random() - 0.5) * 14;
+    dustArr[i * 3 + 1] = -Math.random() * worldH;
+    dustArr[i * 3 + 2] = -1 - Math.random() * 5;
+  }
+  dustGeo.attributes.position.needsUpdate = true;
+  // mobile: pull set pieces toward center, push back
+  const mobile = innerWidth < 760;
+  const halfW = (visible * camera.aspect) / 2;
+  const note = document.getElementById('sizeNote');
+  if (!mobile) {
+    // bề rộng nửa trống = màn hình trừ cột chữ (600px) + padding thật
+    const padPx = Math.min(Math.max(20, innerWidth * 0.06), 90);
+    const emptyPx = Math.max(120, innerWidth - padPx - 620);
+    const availW = emptyPx * SCALE;                 // đổi sang đơn vị thế giới
+    const off = halfW - (emptyPx / 2) * SCALE;      // tâm nửa trống
+    const grow = THREE.MathUtils.clamp(camera.aspect / 1.78, 1, 1.12);
+    const place = (g, half, base) => {              // co nhỏ nếu cụm rộng hơn chỗ trống
+      let sc = base * grow;
+      if (half * 2 * sc > availW * 0.92) sc = Math.max(base * 0.68, (availW * 0.92) / (half * 2));
+      g.scale.setScalar(sc);
+    };
+    stage.about.position.x = off;  place(stage.about, 2.3, 1.3);
+    stage.hm.position.x    = -off; place(stage.hm, 3.0, 1.25);
+    stage.uq.position.x    = off;  place(stage.uq, 3.8, 1.25);
+    stage.hs.position.x    = -off; place(stage.hs, 2.5, 1.25);
+    ['about', 'hm', 'uq', 'hs'].forEach(id => { stage[id].visible = true; });
+    stage.hero.userData.baseS = 1;
+    stage.contact.scale.setScalar(1);
+    SECTIONS.forEach(id => { stage[id].userData.yOff = 0; });
+    note.classList.toggle('show', emptyPx < 430);   // hẹp quá mức co được -> nhắc mở rộng
+  } else {
+    // mobile tinh giản: ẩn cụm 3D theo chương — typography làm chủ
+    ['about', 'hm', 'uq', 'hs'].forEach(id => { stage[id].visible = false; stage[id].userData.yOff = 0; });
+    stage.hero.userData.baseS = 0.9;
+    stage.contact.scale.setScalar(0.9);
+    stage.contact.userData.yOff = 0;
+    note.classList.remove('show');
+  }
+  // hero/contact: cánh vật thể tự né khối chữ giữa theo bề rộng thật của chữ
+  if (mobile) {
+    [stage.hero, stage.contact].forEach(g => (g.userData.layout || []).forEach(o => {
+      const keep = !o.userData.s0; // chỉ giữ kim tuyến — ẩn vật thể cho thoáng
+      o.visible = keep;
+      if (keep) { o.position.x = o.userData.x0 * 0.42; o.position.y = o.userData.y0 * 0.85; }
+    }));
+  } else {
+    const band = (g, anchor) => {
+      const el = document.querySelector(anchor);
+      const tHalf = ((el ? el.offsetWidth : 0) / 2 + 46) * SCALE; // nửa bề rộng chữ (đv thế giới)
+      const bIn = tHalf + 0.25, bOut = halfW * 0.96, bw = Math.max(0.6, bOut - bIn);
+      const ctr = bIn + bw / 2;
+      const k = THREE.MathUtils.clamp(bw / 3.4, 0.5, 1); // dải hẹp -> vật thể nhỏ lại
+      (g.userData.layout || []).forEach(o => {
+        o.visible = true;
+        if (Math.abs(o.userData.y0) > 2.4) { o.position.x = o.userData.x0; o.position.y = o.userData.y0; return; }
+        const dir = o.userData.x0 < 0 ? -1 : 1;
+        const rel = (Math.abs(o.userData.x0) - 5.5) / 2;
+        o.position.x = dir * (ctr + rel * bw * 0.4);
+        o.position.y = o.userData.y0;
+        if (o.userData.s0) o.scale.setScalar(o.userData.s0 * k);
+      });
+    };
+    band(stage.hero, '#hero h1');
+    band(stage.contact, '#contact .col');
+  }
+  // áp lại vị trí dọc sau khi đã chốt yOff (tránh dùng giá trị cũ)
+  SECTIONS.forEach(id => {
+    const el = document.getElementById(id);
+    stage[id].position.y = -(el.offsetTop + el.offsetHeight / 2) * SCALE + (stage[id].userData.yOff || 0);
+  });
+  [stage.about, stage.hm, stage.uq, stage.hs].forEach(s => s.position.z = mobile ? -3.2 : 0);
+}
+
+function syncY() { // cập nhật vị trí dọc cụm 3D theo layout — dùng khi accordion đang mở/đóng
+  for (const id of SECTIONS) {
+    const el = document.getElementById(id);
+    stage[id].position.y = -(el.offsetTop + el.offsetHeight / 2) * SCALE + (stage[id].userData.yOff || 0);
+  }
+}
+
+/* ---------- scroll state + velocity ---------- */
+let camY = 0, camYT = 0, heroP = 0, lastScroll = 0, velo = 0, spin = 0;
+const mouse = { x: 0, y: 0 };
+addEventListener('pointermove', e => {
+  mouse.x = (e.clientX / innerWidth - 0.5) * 2;
+  mouse.y = (e.clientY / innerHeight - 0.5) * 2;
+  mouseTgt = e.target;
+});
+const PARA = reduced ? 0 : 1;
+const clock = new THREE.Clock();
+
+/* Lenis smooth scroll + snap mềm về tâm section khi ngừng cuộn */
+let lenis = null;
+// snap chỉ chạy sau khi cuộn bằng lăn chuột/chạm/phím — kéo thanh trượt thì không can thiệp
+let lastInput = 0;
+const mark = () => { lastInput = Date.now(); };
+const FINE = matchMedia('(pointer: fine)').matches;
+let mouseTgt = null;
+if (!reduced && window.Lenis) {
+  lenis = new Lenis({ lerp: 0.095, smoothWheel: true });
+  lenis.on('scroll', ScrollTrigger.update);
+  addEventListener('wheel', mark, { passive: true });
+  addEventListener('touchmove', mark, { passive: true });
+  addEventListener('keydown', mark);
+  let idleT;
+  lenis.on('scroll', () => {
+    clearTimeout(idleT);
+    idleT = setTimeout(() => {
+      if (Date.now() - lastInput > 1200) return; // đang kéo scrollbar — không snap
+      const vh = innerHeight;
+      let best = null, bestD = vh * 0.4;
+      for (const id of SECTIONS) {
+        const el = document.getElementById(id);
+        if (el.offsetHeight > vh * 1.05) continue; // section đang mở chi tiết (cao hơn màn hình) — không snap
+        const target = el.offsetTop + el.offsetHeight / 2 - vh / 2;
+        const d = Math.abs(target - scrollY);
+        if (d > 2 && d < bestD) { bestD = d; best = target; }
+      }
+      if (best !== null) lenis.scrollTo(best, { duration: 0.85, easing: t => 1 - Math.pow(1 - t, 3) });
+    }, 170);
+  });
+}
+
+/* velocity skew on the whole content — nội dung nghiêng theo tốc độ cuộn */
+const skewSetter = gsap.quickTo('main', 'skewY', { duration: 0.5, ease: 'power3' });
+
+/* custom cursor follower */
+const curEl = document.getElementById('cursor'), ringEl = document.getElementById('ring');
+const cur = { x: innerWidth / 2, y: innerHeight / 2, rx: innerWidth / 2, ry: innerHeight / 2 };
+addEventListener('pointermove', e => { cur.x = e.clientX; cur.y = e.clientY; });
+document.addEventListener('mouseover', e => {
+  const hot = !!e.target.closest('a, button');
+  ringEl.classList.toggle('hot', hot);
+  curEl.classList.toggle('hide', hot); // ẩn chấm — không đè nội dung nút
+});
+
+function frame(nowMs) {
+  if (lenis) lenis.raf(nowMs);
+  const t = clock.getElapsedTime();
+  camYT = -(scrollY + innerHeight / 2) * SCALE;
+  camY = THREE.MathUtils.lerp(camY, camYT, reduced ? 0.3 : 0.14);
+  camera.position.y = camY;
+  camera.position.x = mouse.x * 0.35 * PARA;
+  camera.rotation.y = -mouse.x * 0.02 * PARA;
+  camera.rotation.x = mouse.y * 0.012 * PARA;
+
+  // velocity -> spin & skew
+  const dv = scrollY - lastScroll; lastScroll = scrollY;
+  velo = THREE.MathUtils.lerp(velo, THREE.MathUtils.clamp(dv, -60, 60), 0.12);
+  spin = THREE.MathUtils.lerp(spin, velo * 0.0022, 0.08);
+  if (!reduced && innerWidth >= 760) skewSetter(THREE.MathUtils.clamp(velo * 0.03, -2, 2));
+
+  for (const id of SECTIONS) {
+    const g = stage[id];
+    if (g.userData.update) g.userData.update(t, id === 'hero' ? heroP : id === 'uq' ? uqProgress : 0, spin);
+    if (id !== 'hero') g.rotation.y = spin * 0.3; // mọi vật thể xoay nhẹ theo vận tốc cuộn
+    // fade theo khoảng cách: chỉ hiện rõ trong chương của mình
+    const dist = Math.abs(camY - g.position.y) / VISH;
+    const f = THREE.MathUtils.clamp(1.15 - dist * 1.6, 0, 1); // biến mất hẳn ở ~70% quãng chuyển section
+    for (const m of fadeMats[id]) m.opacity = m.userData.base * f;
+  }
+
+  // rê chuột vào vật thể 3D -> nở kim tuyến tại điểm chạm
+  if (FINE) {
+    if (t - lastRay > 0.18) {
+      lastRay = t;
+      let curG = null, bd = 0.6;
+      for (const id of SECTIONS) {
+        const d = Math.abs(camY - stage[id].position.y) / VISH;
+        if (d < bd) { bd = d; curG = stage[id]; }
+      }
+      if (curG) {
+        raycaster.setFromCamera({ x: mouse.x, y: -mouse.y }, camera);
+        const hits = raycaster.intersectObject(curG, true);
+        if (hits.length) {
+          const p = hits[0].point;
+          const sp = sparkPool[sparkIdx++ % sparkPool.length];
+          sp.position.set(p.x + (Math.random() - 0.5) * 0.35, p.y + (Math.random() - 0.5) * 0.35, p.z + 0.25);
+          sp.userData.t = 0; sp.userData.base = 0.10 + Math.random() * 0.12;
+          sp.userData.rot = (Math.random() - 0.5) * 1.2;
+          sp.visible = true;
+        }
+      }
+    }
+    for (const sp of sparkPool) {
+      if (!sp.visible) continue;
+      sp.userData.t += 1 / 60;
+      const k = sp.userData.t / sp.userData.life;
+      if (k >= 1) { sp.visible = false; continue; }
+      const e = Math.sin(Math.PI * k);
+      sp.scale.setScalar(sp.userData.base * (0.35 + e));
+      sp.userData.mat.opacity = 0.65 * e;
+      sp.userData.mat.rotation = sp.userData.rot + k * 0.7; // xoay nhẹ khi lấp lánh
+      sp.position.y += 0.005;
+    }
+  }
+
+  // cursor lerp + hiệu ứng khi cuộn: chấm mực giãn dọc, vòng nở theo tốc độ
+  cur.rx = THREE.MathUtils.lerp(cur.rx, cur.x, 0.55);
+  cur.ry = THREE.MathUtils.lerp(cur.ry, cur.y, 0.55);
+  const vAbs = Math.min(Math.abs(velo) / 45, 1);
+  curEl.style.transform = `translate(${cur.x - 4}px, ${cur.y - 4}px) scale(${1 - vAbs * 0.25}, ${1 + vAbs * 1.8})`;
+  const rOff = ringEl.classList.contains('hot') ? 35 : 19;
+  ringEl.style.transform = `translate(${cur.rx - rOff}px, ${cur.ry - rOff}px) scale(${1 - vAbs * 0.3}, ${1 + vAbs * 0.85})`; // kéo dãn dọc, không phình
+  ringEl.style.opacity = (1 - vAbs * 0.35).toFixed(2);
+
+  updateMilestones();
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+
+/* ============================================================
+   GSAP / SCROLLTRIGGER — DOM choreography
+   ============================================================ */
+
+/* word splitter for headings */
+document.querySelectorAll('.split').forEach(el => {
+  const splitNow = () => {
+    const text = el.textContent;
+    el.innerHTML = '';
+    text.split(/(\s+)/).forEach(part => {
+      if (/^\s+$/.test(part)) { el.appendChild(document.createTextNode(' ')); return; }
+      const w = document.createElement('span'); w.className = 'w';
+      const inner = document.createElement('span'); inner.textContent = part;
+      w.appendChild(inner); el.appendChild(w);
+    });
+  };
+  el.dataset.enHtml = ''; // marker
+  splitNow();
+  el._resplit = splitNow;
+});
+
+function buildTriggers() {
+  /* heading word reveals — mặt nạ chỉ bật trong lúc chạy hiệu ứng, xong thì nhả (không bao giờ cắt nét/dấu) */
+  document.querySelectorAll('.split').forEach(el => {
+    const ws = el.querySelectorAll('.w');
+    const setOv = v => ws.forEach(w => { w.style.overflow = v; });
+    gsap.fromTo(el.querySelectorAll('.w > span'),
+      { yPercent: 125, rotate: 7 },
+      { yPercent: 0, rotate: 0, duration: 1.05, ease: 'power4.out', stagger: 0.06,
+        onStart: () => setOv('hidden'),
+        onComplete: () => setOv('visible'),
+        scrollTrigger: { trigger: el, start: 'top 82%', toggleActions: 'play none none reverse',
+          onLeaveBack: () => setOv('hidden') } });
+  });
+  /* generic reveals */
+  document.querySelectorAll('.reveal').forEach(el => {
+    gsap.fromTo(el, { y: 36, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.9, ease: 'power2.out',
+        scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none reverse' } });
+  });
+  /* big outline numbers: parallax + chỉ rõ khi section vào giữa màn hình */
+  document.querySelectorAll('.bignum').forEach(el => {
+    const tl2 = gsap.timeline({ scrollTrigger: {
+      trigger: el.parentElement, start: 'top bottom', end: 'bottom top', scrub: 0.5 } });
+    tl2.fromTo(el, { yPercent: -40 }, { yPercent: -70, ease: 'none', duration: 1 }, 0)
+       .fromTo(el, { autoAlpha: 0 }, { autoAlpha: 1, ease: 'none', duration: 0.22 }, 0.3)
+       .to(el, { autoAlpha: 0, ease: 'none', duration: 0.22 }, 0.72);
+  });
+  /* counters */
+  document.querySelectorAll('.cnt').forEach(el => {
+    const to = +el.dataset.to;
+    ScrollTrigger.create({
+      trigger: el, start: 'top 88%',
+      onEnter: () => gsap.fromTo(el, { innerText: 0 },
+        { innerText: to, duration: 1.6, ease: 'power1.out', snap: { innerText: 1 } }),
+      once: true
+    });
+  });
+}
+buildTriggers();
+
+/* global scrub-driven choreography (gọi lại được sau khi đổi ngôn ngữ) */
+let uqProgress = 0;
+function buildScrubs() {
+  /* hero scrub -> 3D + hero exit: chữ phóng nhỏ, trôi lên, mờ dần */
+  ScrollTrigger.create({
+    trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 0.5,
+    onUpdate: self => { heroP = self.progress; }
+  });
+  gsap.to('#hero h1', { yPercent: -14, scale: 0.92, opacity: 0, ease: 'none',
+    scrollTrigger: { trigger: '#hero', start: 'top top', end: '52% top', scrub: 0.4 } }); // tan biến trước khi chạm header
+  gsap.to('#hero .kicker, #hero .name, #hero .sub', { yPercent: -30, opacity: 0, ease: 'none',
+    scrollTrigger: { trigger: '#hero', start: 'top top', end: '52% top', scrub: 0.4 } });
+
+  /* marquees — chạy ngang theo scroll, hai hướng ngược nhau */
+  gsap.fromTo('#mq1 .track', { xPercent: 0 }, { xPercent: -28, ease: 'none',
+    scrollTrigger: { trigger: '#mq1', start: 'top bottom', end: 'bottom top', scrub: 0.4 } });
+  gsap.fromTo('#mq2 .track', { xPercent: -28 }, { xPercent: 0, ease: 'none',
+    scrollTrigger: { trigger: '#mq2', start: 'top bottom', end: 'bottom top', scrub: 0.4 } });
+
+  /* uq rack scrub */
+  ScrollTrigger.create({
+    trigger: '#uq', start: 'top 80%', end: 'bottom 30%', scrub: 0.6,
+    onUpdate: self => { uqProgress = self.progress; }
+  });
+
+  /* planogram assembly scrub */
+  ScrollTrigger.create({
+    trigger: '#hs', start: 'top 85%', end: 'center 45%', scrub: 0.6,
+    onUpdate: self => { plano.userData.progress = self.progress; }
+  });
+}
+buildScrubs();
+
+/* ============================================================
+   language toggle
+   ============================================================ */
+let lang = 'en';
+document.getElementById('langBtn').addEventListener('click', () => {
+  lang = lang === 'en' ? 'vi' : 'en';
+  document.getElementById('langBtn').textContent = lang === 'en' ? 'VI' : 'EN';
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-en]').forEach(el => { el.innerHTML = el.dataset[lang]; });
+  if (window.__setMsTips) window.__setMsTips();
+  document.querySelectorAll('.split').forEach(el => {
+    if (el.dataset[lang]) el.textContent = el.dataset[lang].replace(/&amp;/g, '&');
+    el._resplit && el._resplit();
+  });
+  ScrollTrigger.getAll().forEach(s => s.kill());
+  gsap.set('.reveal, .w > span, #hero h1, #hero .kicker, #hero .name, #hero .sub', { clearProps: 'all' });
+  buildTriggers();
+  buildScrubs();
+  ScrollTrigger.refresh();
+  sync();
+});
+
+/* ============================================================
+   boot / resize
+   ============================================================ */
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  sync();
+  ScrollTrigger.refresh();
+});
+document.fonts.ready.then(() => { sync(); ScrollTrigger.refresh(); });
+sync();
+requestAnimationFrame(frame);
+
+/* cột mốc section — bấm để nhảy chương */
+const msNav = document.getElementById('milestones');
+const MS_LBL = { hero: ['INTRO', 'MỞ ĐẦU'], about: ['01 — PROFILE', '01 — HỒ SƠ'],
+  hm: ['02 — H&M', '02 — H&M'], uq: ['03 — UNIQLO', '03 — UNIQLO'],
+  hs: ['04 — HASAKI', '04 — HASAKI'], contact: ['05 — CONTACT', '05 — LIÊN HỆ'] };
+window.__setMsTips = () => {
+  [...msNav.children].forEach((b, i) => b.setAttribute('data-tip', MS_LBL[SECTIONS[i]][lang === 'en' ? 0 : 1]));
+};
+SECTIONS.forEach(id => {
+  const b = document.createElement('button');
+  b.setAttribute('aria-label', id);
+  b.addEventListener('click', () => {
+    mark();
+    const el = document.getElementById(id);
+    const y = el.offsetTop + el.offsetHeight / 2 - innerHeight / 2;
+    if (lenis) lenis.scrollTo(y, { duration: 1, easing: tt => 1 - Math.pow(1 - tt, 3) });
+    else scrollTo({ top: y, behavior: 'smooth' });
+  });
+  msNav.appendChild(b);
+});
+window.__setMsTips();
+let msCur = -1, msLastY = -1;
+function updateMilestones() {
+  if (Math.abs(scrollY - msLastY) < 30) return;
+  msLastY = scrollY;
+  const mid = scrollY + innerHeight / 2;
+  let idx = 0;
+  for (let i = 0; i < SECTIONS.length; i++) {
+    if (mid >= document.getElementById(SECTIONS[i]).offsetTop) idx = i;
+  }
+  if (idx !== msCur) {
+    msCur = idx;
+    [...msNav.children].forEach((b, i) => b.classList.toggle('on', i === idx));
+  }
+  // cuộn rời chương -> tự gập chi tiết đang mở
+  document.querySelectorAll('.xp-btn.open').forEach(btn => {
+    const sec = btn.closest('section');
+    const top = sec.offsetTop, bot = top + sec.offsetHeight;
+    if (scrollY > bot - innerHeight * 0.25 || scrollY + innerHeight < top + innerHeight * 0.25) xpSet(btn, false);
+  });
+}
+
+/* nút về đầu trang */
+const toTopEl = document.getElementById('toTop');
+toTopEl.addEventListener('click', () => {
+  mark();
+  if (lenis) lenis.scrollTo(0, { duration: 1.2, easing: t => 1 - Math.pow(1 - t, 3) });
+  else scrollTo({ top: 0, behavior: 'smooth' });
+});
+setInterval(() => toTopEl.classList.toggle('show', scrollY > innerHeight * 0.6), 200);
+
+/* accordion chi tiết kinh nghiệm */
+function xpSet(btn, open) {
+  const body = btn.parentElement.querySelector('.xp-body');
+  btn.classList.toggle('open', open);
+  btn.querySelector('i').textContent = open ? '–' : '+';
+  gsap.to(body, { height: open ? 'auto' : 0, duration: 0.55, ease: 'power2.inOut',
+    onUpdate: syncY, // cụm 3D trôi theo layout từng frame — không giật
+    onComplete: () => {
+      if (open) body.style.height = 'auto';
+      ScrollTrigger.refresh();
+      syncY();
+    } });
+}
+document.querySelectorAll('.xp-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const open = !btn.classList.contains('open');
+    if (open) { // tự trượt để phần chi tiết vào tầm đọc
+      const top = btn.getBoundingClientRect().top + scrollY - 110;
+      mark();
+      if (lenis) lenis.scrollTo(top, { duration: 0.9, easing: tt => 1 - Math.pow(1 - tt, 3) });
+      else scrollTo({ top, behavior: 'smooth' });
+    }
+    xpSet(btn, open);
+  });
+});
+
+/* thông báo bản mobile rút gọn */
+const pcNote = document.getElementById('pcNote');
+if (innerWidth < 760 && !localStorage.getItem('pcNoteOff')) pcNote.classList.add('show');
+document.getElementById('pcNoteX').addEventListener('click', () => {
+  pcNote.classList.remove('show');
+  localStorage.setItem('pcNoteOff', '1');
+});
+
+/* test hook */
+window.__exp = {
+  jumpTo(id) {
+    const el = document.getElementById(id); if (!el) return;
+    const y = el.offsetTop + el.offsetHeight / 2 - innerHeight / 2;
+    if (lenis) lenis.scrollTo(y, { immediate: true }); else scrollTo(0, y);
+  },
+  get scroll() { return scrollY; }
+};
+</script>
+</body>
+</html>
