@@ -8,15 +8,18 @@
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <meta name="theme-color" content="#faf8f3">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400;1,9..144,600&family=Archivo:wght@300;400;500;600&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
 </script>
+<script>try{const t=localStorage.getItem('theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.dataset.theme='dark';}catch(e){}</script>
 <style>
 :root{
   --paper: #faf8f3;
@@ -30,6 +33,15 @@
 }
 *{ margin:0; padding:0; box-sizing:border-box; }
 html{ scroll-behavior:auto; color-scheme:light; scrollbar-width:none; }
+/* ---------- dark mode: đảo mực ↔ giấy, giữ nguyên chất wireframe ---------- */
+html[data-theme="dark"]{
+  --paper:#14120e; --paper-2:#1a1814; --ink:#ece7da;
+  --ink-60:rgba(236,231,218,.6); --ink-30:rgba(236,231,218,.3); --ink-12:rgba(236,231,218,.12);
+  color-scheme:dark;
+}
+html[data-theme="dark"] body::after{ filter:invert(1); }                       /* hạt grain sáng trên nền tối */
+html[data-theme="dark"] .bm img:not([src*="hm.svg"]){ filter:invert(1); }      /* logo mực (Uniqlo, Hasaki) đảo theo */
+html[data-theme="dark"] .bm img[src*="hm.svg"]{ filter:brightness(0) invert(.92); } /* H&M: về trắng mực — đồng bộ Uniqlo/Hasaki (invert #161410 ≈ .92) */
 
 /* ---------- ẩn scrollbar — cột mốc thay thế vai trò định vị ---------- */
 ::-webkit-scrollbar{ width:0; height:0; display:none; }
@@ -278,7 +290,7 @@ footer{ position:absolute; bottom:0; left:0; right:0; z-index:10; text-align:cen
 
 <header id="topbar">
   <div class="logo">ĐÔNG NGUYỄN<em data-en="— retail operations" data-vi="— vận hành bán lẻ">— retail operations</em></div>
-  <div class="btns"><button id="langBtn">VI</button></div>
+  <div class="btns"><button id="themeBtn" aria-label="Chuyển giao diện sáng / tối" title="Light / Dark">☾</button><button id="langBtn">VI</button></div>
 </header>
 
 <main>
@@ -614,6 +626,83 @@ function chamomileMesh(soft = false) { // hoa cúc chamomile — nhụy tròn, 8
   return g;
 }
 
+function catSitMesh(soft = false) { // mèo ngồi — thân bầu, đầu tròn, tai tam giác, đuôi quấn ra trước chân (1 nét)
+  const g = new THREE.Group();
+  const mat = soft ? lineSoft : lineMat;
+  const ln = a => new THREE.Line(new THREE.BufferGeometry().setFromPoints(a.map(v => new THREE.Vector3(...v))), mat);
+  const ell = (cx, cy, rx, ry, seg = 26) => {
+    const arr = [];
+    for (let i = 0; i <= seg; i++) { const a = i / seg * Math.PI * 2; arr.push(new THREE.Vector3(cx + Math.cos(a) * rx, cy + Math.sin(a) * ry, 0)); }
+    return new THREE.Line(new THREE.BufferGeometry().setFromPoints(arr), mat);
+  };
+  g.add(ell(0, 0.45, 0.33, 0.46));                          // thân bầu ngồi
+  g.add(ell(0.10, 1.00, 0.18, 0.17));                       // đầu
+  g.add(ln([[-0.02, 1.13], [0.02, 1.30], [0.12, 1.15]]));   // tai trái
+  g.add(ln([[0.16, 1.16], [0.25, 1.28], [0.27, 1.12]]));    // tai phải
+  const tail = new THREE.Group();                            // đuôi quấn ra trước — pivot ở gốc để quẫy
+  const tp = [];
+  for (let i = 0; i <= 14; i++) {
+    const k = i / 14;
+    tp.push(new THREE.Vector3(k * 0.75, Math.sin(k * Math.PI) * 0.16 * (1 - k * 0.5), 0));
+  }
+  tail.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(tp), mat));
+  tail.position.set(-0.30, 0.02, 0);
+  g.add(tail);
+  g.userData.tail = tail;
+  g.add(ln([[0.16, 0.45], [0.16, 0.02]]));                  // chân trước
+  return g;
+}
+
+function catWalkMesh(soft = false) { // mèo dáng đi — thân ngang, 4 chân vung quanh hông, đuôi cong (1 nét)
+  const g = new THREE.Group();
+  const mat = soft ? lineSoft : lineMat;
+  const ln = a => new THREE.Line(new THREE.BufferGeometry().setFromPoints(a.map(v => new THREE.Vector3(...v))), mat);
+  const ell = (cx, cy, rx, ry, seg = 26) => {
+    const arr = [];
+    for (let i = 0; i <= seg; i++) { const a = i / seg * Math.PI * 2; arr.push(new THREE.Vector3(cx + Math.cos(a) * rx, cy + Math.sin(a) * ry, 0)); }
+    return new THREE.Line(new THREE.BufferGeometry().setFromPoints(arr), mat);
+  };
+  g.add(ell(0, 0.42, 0.46, 0.26));                          // thân ngang
+  g.add(ell(0.52, 0.66, 0.17, 0.16));                       // đầu
+  g.add(ln([[0.40, 0.79], [0.45, 0.96], [0.54, 0.81]]));    // tai trước
+  g.add(ln([[0.58, 0.81], [0.67, 0.94], [0.70, 0.77]]));    // tai sau
+  const tail = new THREE.Group();
+  const tp = [];
+  for (let i = 0; i <= 12; i++) { const k = i / 12; tp.push(new THREE.Vector3(-k * 0.34, k * 0.5 + Math.sin(k * Math.PI) * 0.10, 0)); }
+  tail.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(tp), mat));
+  tail.position.set(-0.42, 0.50, 0);
+  g.add(tail);
+  const legs = [];
+  [[0.30, 1], [0.20, 0], [-0.22, 0], [-0.32, 1]].forEach(([hx, ph]) => {
+    const lg = new THREE.Group();
+    lg.add(ln([[0, 0], [0, -0.30]]));
+    lg.position.set(hx, 0.26, 0);
+    lg.userData.phase = ph * Math.PI;
+    legs.push(lg); g.add(lg);
+  });
+  g.userData = { tail, legs };
+  return g;
+}
+function catActorMesh(soft = false) { // mèo 2 tư thế: ngồi (mặc định) ↔ dáng đi — hoán đổi khi đi dạo
+  const g = new THREE.Group();
+  const sit = catSitMesh(soft); g.add(sit);
+  const walk = catWalkMesh(soft); walk.visible = false; walk.position.y = 0.04; g.add(walk); // +0.04: chân chạm cùng mặt đất với dáng ngồi
+  g.userData = { sit, walk };
+  return g;
+}
+
+/* mèo có hành vi: ngồi quẫy đuôi → đứng dậy đi dạo một quãng → quay về ngồi lại */
+const sitCats = [];
+function regSitCat(cat, range, aseed) {
+  const u = cat.userData;
+  u.home = { x: cat.position.x, y: cat.position.y };  // chỗ ngồi gốc
+  u.range = range;                                     // bán kính loanh quanh (đv thế giới, local)
+  u.aseed = aseed;                                     // lệch pha để các mèo không đồng bộ
+  u.flip = Math.sign(cat.scale.x) || 1;
+  u.baseS = Math.abs(cat.scale.x);
+  sitCats.push(cat);
+}
+
 /* hero — large wireframe icosahedron + orbiting dot ring */
 {
   const g = new THREE.Group();
@@ -650,6 +739,38 @@ function chamomileMesh(soft = false) { // hoa cúc chamomile — nhụy tròn, 8
   };
   mkSpark(-7.3, 2.7, 0.30, 0); mkSpark(-2.6, 3.1, 0.18, 2); mkSpark(2.9, 3.3, 0.26, 4);
   mkSpark(7.5, 2.1, 0.22, 1); mkSpark(-6.5, -3.0, 0.22, 3); mkSpark(7.2, -0.9, 0.16, 5);
+  // mèo nhỏ chạy qua lại dưới chân hero — cùng nét wireframe 1 nét
+  const cat = new THREE.Group();
+  {
+    const ln = a => new THREE.Line(new THREE.BufferGeometry().setFromPoints(a.map(v => new THREE.Vector3(...v))), lineMat);
+    const ell = (cx, cy, rx, ry, seg = 26) => {
+      const arr = [];
+      for (let i = 0; i <= seg; i++) { const a = i / seg * Math.PI * 2; arr.push(new THREE.Vector3(cx + Math.cos(a) * rx, cy + Math.sin(a) * ry, 0)); }
+      return new THREE.Line(new THREE.BufferGeometry().setFromPoints(arr), lineMat);
+    };
+    cat.add(ell(0, 0.42, 0.46, 0.26));                          // thân elip
+    cat.add(ell(0.52, 0.66, 0.17, 0.16));                       // đầu tròn
+    cat.add(ln([[0.40, 0.79], [0.45, 0.96], [0.54, 0.81]]));    // tai trước
+    cat.add(ln([[0.58, 0.81], [0.67, 0.94], [0.70, 0.77]]));    // tai sau
+    const tail = new THREE.Group();                              // đuôi cong, vẫy nhẹ
+    const tp = [];
+    for (let i = 0; i <= 12; i++) { const k = i / 12; tp.push(new THREE.Vector3(-k * 0.34, k * 0.5 + Math.sin(k * Math.PI) * 0.10, 0)); }
+    tail.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(tp), lineMat));
+    tail.position.set(-0.42, 0.50, 0);
+    cat.add(tail);
+    const legs = [];                                             // 4 chân xoay quanh hông
+    [[0.30, 1], [0.20, 0], [-0.22, 0], [-0.32, 1]].forEach(([hx, ph]) => {
+      const lg = new THREE.Group();
+      lg.add(ln([[0, 0], [0, -0.30]]));
+      lg.position.set(hx, 0.26, 0);
+      lg.userData.phase = ph * Math.PI;
+      legs.push(lg); cat.add(lg);
+    });
+    cat.userData = { tail, legs, flip: 1 };
+    cat.scale.setScalar(0.85);
+    cat.position.set(0, -3.85, 0.3);
+    g.add(cat);
+  }
   g.userData.layout = [...items, ...sparkles];
   g.userData.update = (t, p, spin) => {
     items.forEach(o => {
@@ -661,6 +782,16 @@ function chamomileMesh(soft = false) { // hoa cúc chamomile — nhụy tròn, 8
       sp.scale.setScalar(sp.userData.base * tw);
       sp.rotation.z = Math.sin(t * 0.2 + sp.userData.seed) * 0.2;
     });
+    // mèo chạy qua lại: ping-pong mượt, quay đầu ở hai biên, chân vung theo nhịp, đuôi vẫy
+    const span = 5.2, sp = 0.45;
+    cat.position.x = Math.sin(t * sp) * span;
+    const dir = Math.cos(t * sp) >= 0 ? 1 : -1;                       // hướng chạy hiện tại
+    cat.userData.flip = THREE.MathUtils.lerp(cat.userData.flip, dir, 0.12); // lật thân mềm khi quay đầu
+    cat.scale.set(0.85 * cat.userData.flip, 0.85, 0.85);
+    const run = Math.abs(Math.cos(t * sp));                           // tốc độ thật — chậm dần ở hai biên
+    cat.position.y = -3.85 + Math.abs(Math.sin(t * 7.5)) * 0.06 * run; // nhún nhẹ theo bước chạy
+    cat.userData.legs.forEach(lg => { lg.rotation.z = Math.sin(t * 7.5 + lg.userData.phase) * 0.55 * run; });
+    cat.userData.tail.rotation.z = Math.sin(t * 2.2) * 0.18 + 0.10;
     g.rotation.z = p * 0.5;
     g.scale.setScalar((g.userData.baseS || 1) * (1 - p * 0.3));
   };
@@ -681,6 +812,8 @@ function chamomileMesh(soft = false) { // hoa cúc chamomile — nhụy tròn, 8
   items.push(lp); g.add(lp);
   const cmA = chamomileMesh(); cmA.scale.setScalar(0.95); cmA.position.set(2.15, -2.5, -0.4); cmA.userData.seed = 9.3;
   items.push(cmA); g.add(cmA); // hoa cúc — motif chamomile
+  const catA = catActorMesh(); catA.scale.setScalar(0.8); catA.position.set(-2.5, -2.3, -0.5); catA.userData.seed = 12.7;
+  items.push(catA); g.add(catA); regSitCat(catA, -0.7, 3.3); // mèo ngồi cạnh thỏi son
   g.userData.update = t => {
     items.forEach(c => {
       c.position.y += Math.sin(t * 0.5 + c.userData.seed) * 0.0012;
@@ -718,6 +851,8 @@ function chamomileMesh(soft = false) { // hoa cúc chamomile — nhụy tròn, 8
   items.push(bust); g.add(bust);
   const cmH = chamomileMesh(true); cmH.scale.setScalar(1.0); cmH.position.set(2.9, -2.85, -0.6); cmH.userData.seed = 11.2;
   items.push(cmH); g.add(cmH); // hoa cúc — motif chamomile
+  const catH = catActorMesh(true); catH.scale.setScalar(0.85); catH.position.set(-2.65, -2.95, -0.7); catH.userData.seed = 14.1;
+  items.push(catH); g.add(catH); regSitCat(catH, -0.8, 5.1); // mèo ngồi nét mờ
   g.userData.update = t => {
     items.forEach(el => {
       el.rotation.y = Math.sin(t * 0.3 + el.userData.seed) * 0.18;
@@ -751,6 +886,8 @@ function chamomileMesh(soft = false) { // hoa cúc chamomile — nhụy tròn, 8
       const f = chamomileMesh(soft); f.scale.setScalar(sc); f.rotation.z = rz;
       f.position.set(x, -1.9, -0.3); g.add(f);
     });
+  const catU = catActorMesh(); catU.scale.setScalar(0.6); catU.position.set(2.5, -1.9, 0.45);
+  g.add(catU); regSitCat(catU, -1.8, 7.7); // mèo ngồi trên sàn — giữa trụ giàn và ma-nơ-canh
   const items = [];
   for (let i = 0; i < 4; i++) {
     const it = new THREE.Group();
@@ -810,6 +947,8 @@ const plano = (() => {
     const cm = chamomileMesh(soft); cm.scale.setScalar(sc);
     cm.position.set(x, BASE - 0.35, 0); g.add(cm);
   });
+  const catS = catActorMesh(); catS.scale.setScalar(0.75); catS.scale.x *= -1; // quay mặt về kệ
+  catS.position.set(4.2, BASE - 0.35, 0); g.add(catS); regSitCat(catS, 1.0, 2.2); // mèo ngồi ngoài bông cúc phải
   g.userData.progress = 0;
   g.userData.update = t => {
     const p = g.userData.progress;
@@ -850,6 +989,7 @@ const plano = (() => {
   add(fl2, 5.6, 0.4, 1.5, 5.6);
   add(chamomileMesh(), -7.3, -3.4, 1.5, 6.8);    // hoa cúc góc thấp-trái — khép motif, ngoài dải dồn band()
   add(chamomileMesh(true), 6.8, 3.1, 0.85, 7.9);
+  const catC = catActorMesh(); add(catC, 7.1, -3.5, 1.1, 8.6); regSitCat(catC, -1.2, 9.4); // mèo ngồi góc thấp-phải
   const sparkles2 = [];
   const mkSpark2 = (x, y, sc, seed) => {
     const sp = new THREE.Group();
@@ -888,10 +1028,12 @@ const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({
 scene.add(dust);
 
 /* ---------- sparkle khi rê chuột vào vật thể 3D ---------- */
-const sparkTex = (() => { // ngôi sao 4 cánh lấp lánh ✦ — nét mực sắc
-  const c = document.createElement('canvas'); c.width = c.height = 128;
-  const x = c.getContext('2d');
-  x.fillStyle = '#161410';
+const sparkCanvas = document.createElement('canvas'); sparkCanvas.width = sparkCanvas.height = 128;
+const sparkTex = new THREE.CanvasTexture(sparkCanvas);
+function drawSpark(color) { // ngôi sao 4 cánh lấp lánh ✦ — vẽ lại theo màu mực của theme
+  const x = sparkCanvas.getContext('2d');
+  x.clearRect(0, 0, 128, 128);
+  x.fillStyle = color;
   x.beginPath();
   x.moveTo(64, 6);
   x.quadraticCurveTo(70, 58, 122, 64);
@@ -899,8 +1041,9 @@ const sparkTex = (() => { // ngôi sao 4 cánh lấp lánh ✦ — nét mực s�
   x.quadraticCurveTo(58, 70, 6, 64);
   x.quadraticCurveTo(58, 58, 64, 6);
   x.closePath(); x.fill();
-  return new THREE.CanvasTexture(c);
-})();
+  sparkTex.needsUpdate = true;
+}
+drawSpark('#161410');
 const sparkPool = [];
 for (let i = 0; i < 16; i++) {
   const m = new THREE.SpriteMaterial({ map: sparkTex, transparent: true, opacity: 0, depthWrite: false });
@@ -1158,6 +1301,31 @@ function frame(nowMs) {
     fl.rotation.z = Math.sin(t * 0.18 + fl.userData.seed * 2) * 0.08;
   }
 
+  // mèo: ngồi quẫy đuôi (≈60% chu kỳ) → đứng dậy đi dạo một quãng rồi quay về ngồi lại
+  for (const c of sitCats) {
+    const u = c.userData;
+    const T = 17 + (u.aseed % 5);                                   // chu kỳ riêng — các mèo lệch nhịp
+    const ph = ((t + u.aseed * 7) % T) / T;
+    const k = THREE.MathUtils.clamp((ph - 0.58) / 0.38, 0, 1);      // 0..1 trong đoạn đi dạo
+    const wp = (1 - Math.cos(k * Math.PI * 2)) / 2;                  // đi ra rồi vòng về — vận tốc 0 ở hai đầu
+    const v = Math.sin(k * Math.PI * 2);                             // vận tốc chuẩn hóa (dương = chiều đi ra)
+    const walking = k > 0 && k < 1 && Math.abs(v) > 0.05;
+    c.position.x = u.home.x + wp * u.range;
+    u.sit.visible = !walking;
+    u.walk.visible = walking;
+    if (walking) {
+      const dirX = (v >= 0 ? 1 : -1) * Math.sign(u.range);           // mặt quay theo chiều đang đi
+      u.flip = THREE.MathUtils.lerp(u.flip, dirX, 0.15);
+      c.position.y = u.home.y + Math.abs(Math.sin(t * 6.5)) * 0.05 * Math.abs(v); // nhún theo bước
+      u.walk.userData.legs.forEach(lg => { lg.rotation.z = Math.sin(t * 6.5 + lg.userData.phase) * 0.5 * Math.abs(v); });
+      u.walk.userData.tail.rotation.z = Math.sin(t * 2.5) * 0.12;
+    } else {
+      c.position.y = u.home.y;
+      u.sit.userData.tail.rotation.z = Math.sin(t * 1.6 + u.aseed * 2) * 0.22 + 0.06; // ngồi quẫy đuôi
+    }
+    c.scale.set(u.baseS * u.flip, u.baseS, u.baseS);
+  }
+
   // rê chuột vào vật thể 3D -> nở kim tuyến tại điểm chạm
   if (FINE) {
     if (t - lastRay > 0.18) {
@@ -1334,6 +1502,29 @@ document.getElementById('langBtn').addEventListener('click', () => {
   buildScrubs();
   ScrollTrigger.refresh();
   sync();
+});
+
+/* ============================================================
+   theme toggle — sáng / tối (đồng bộ CSS + nét vẽ 3D + kim tuyến)
+   ============================================================ */
+const themeBtn = document.getElementById('themeBtn');
+const INK_DARK = 0xece7da; // màu mực kem trên nền tối — khớp --ink dark
+function applyTheme(t) {
+  if (t === 'dark') document.documentElement.dataset.theme = 'dark';
+  else document.documentElement.removeAttribute('data-theme');
+  themeBtn.textContent = t === 'dark' ? '☀' : '☾';
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', t === 'dark' ? '#14120e' : '#faf8f3');
+  // đổi màu mực của mọi nét vẽ 3D (line, point) — sprite có map xử lý riêng bằng drawSpark
+  const c = t === 'dark' ? INK_DARK : INK;
+  scene.traverse(o => { if (o.material && o.material.color && !o.material.map) o.material.color.set(c); });
+  drawSpark(t === 'dark' ? '#ece7da' : '#161410');
+}
+let theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'; // đã set sớm ở head, chống FOUC
+applyTheme(theme);
+themeBtn.addEventListener('click', () => {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('theme', theme); } catch (e) {}
+  applyTheme(theme);
 });
 
 /* ============================================================
