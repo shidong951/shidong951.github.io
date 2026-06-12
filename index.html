@@ -225,8 +225,12 @@ footer{ position:absolute; bottom:0; left:0; right:0; z-index:10; text-align:cen
     border:1px solid var(--ink-60); pointer-events:none; top:0; left:0;
     transition:width .25s ease, height .25s ease, opacity .25s ease; }
   #ring.hot{ width:70px; height:70px; opacity:.45; }
+  /* mũi tên chỉ hướng cuộn — nét mực mảnh, hiện khi cuộn, tan khi ngừng */
+  #scrollArrow{ position:fixed; z-index:60; top:0; left:0; width:14px; height:46px;
+    pointer-events:none; opacity:0; color:var(--ink-60); will-change:transform,opacity; }
+  #scrollArrow svg{ display:block; width:100%; height:100%; overflow:visible; }
 }
-@media (pointer:coarse){ #cursor, #ring{ display:none; } }
+@media (pointer:coarse){ #cursor, #ring, #scrollArrow{ display:none; } }
 
 /* ---------- marquee ---------- */
 .marquee{ position:relative; z-index:10; overflow:hidden; padding:4.5vh 0;
@@ -262,6 +266,12 @@ footer{ position:absolute; bottom:0; left:0; right:0; z-index:10; text-align:cen
 <nav id="milestones" aria-label="Sections"></nav>
 <div id="cursor"></div>
 <div id="ring"></div>
+<div id="scrollArrow" aria-hidden="true">
+  <svg viewBox="0 0 14 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7 3 V39" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M2.6 34.6 L7 40 L11.4 34.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</div>
 <button id="toTop" aria-label="Về đầu trang" title="Về đầu trang">↑</button>
 <div id="pcNote"><span data-en="Light mobile version — open on a computer for the full 3D experience" data-vi="Bản rút gọn cho điện thoại — mở trên máy tính để xem trọn trải nghiệm 3D">Bản rút gọn cho điện thoại — mở trên máy tính để xem trọn trải nghiệm 3D</span><button id="pcNoteX" aria-label="Đóng">✕</button></div>
 <div id="sizeNote" data-en="Window is a bit narrow — widen your browser for the full layout" data-vi="Cửa sổ đang hẹp — mở rộng trình duyệt để xem trọn bố cục">Window is a bit narrow — widen your browser for the full layout</div>
@@ -572,6 +582,38 @@ function bottleMesh(type, soft = false) { // chai lọ mỹ phẩm — tối gi�
   return g;
 }
 
+function chamomileMesh(soft = false) { // hoa cúc chamomile — nhụy tròn, 8 cánh elip, cuống cong + lá (cùng ngôn ngữ wireframe 1 nét)
+  const g = new THREE.Group();
+  const mat = soft ? lineSoft : lineMat;
+  const ellipse = (cx, cy, rx, ry, seg = 22) => {
+    const pts = [];
+    for (let i = 0; i <= seg; i++) {
+      const a = i / seg * Math.PI * 2;
+      pts.push(new THREE.Vector3(cx + Math.cos(a) * rx, cy + Math.sin(a) * ry, 0));
+    }
+    return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat);
+  };
+  // cuống cong nhẹ kiểu nét vẽ tay
+  const stem = [];
+  for (let i = 0; i <= 14; i++) { const t = i / 14; stem.push(new THREE.Vector3(Math.sin(t * Math.PI) * 0.07, t * 0.9, 0)); }
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(stem), mat));
+  // lá đơn nghiêng bên trái thân
+  const leaf = ellipse(0, 0, 0.16, 0.055);
+  leaf.rotation.z = 0.7; leaf.position.set(-0.14, 0.34, 0);
+  g.add(leaf);
+  // đầu hoa: nhụy + 8 cánh tỏa đều
+  const head = new THREE.Group();
+  head.add(ellipse(0, 0, 0.13, 0.13)); // nhụy
+  for (let i = 0; i < 8; i++) {
+    const petal = ellipse(0.31, 0, 0.165, 0.08);
+    petal.rotation.z = i / 8 * Math.PI * 2;
+    head.add(petal);
+  }
+  head.position.y = 0.9;
+  g.add(head);
+  return g;
+}
+
 /* hero — large wireframe icosahedron + orbiting dot ring */
 {
   const g = new THREE.Group();
@@ -593,6 +635,8 @@ function bottleMesh(type, soft = false) { // chai lọ mỹ phẩm — tối gi�
   fl.add(tubeLines(0.5, 0.38, 0, 1.1));
   fl.add(tubeLines(0.2, 0.2, 1.1, 1.44));
   add(fl, 5.5, 0.5, 1.5, 5.1);
+  add(chamomileMesh(), -7.3, -3.4, 1.5, 6.2);    // hoa cúc góc thấp-trái — ngoài dải dồn band(), không chạm cụm áo
+  add(chamomileMesh(true), 6.9, 3.2, 0.85, 7.4); // bông nhỏ nét mờ góc cao-phải
   // ánh kim tuyến lấp lánh quanh tiêu đề — chất beauty, không cắt ngang chữ
   const sparkles = [];
   const mkSpark = (x, y, sc, seed) => {
@@ -635,6 +679,8 @@ function bottleMesh(type, soft = false) { // chai lọ mỹ phẩm — tối gi�
   });
   const lp = bottleMesh(3); lp.scale.setScalar(2.2); lp.position.set(-1.5, -2.2, -0.6); lp.userData.seed = 7;
   items.push(lp); g.add(lp);
+  const cmA = chamomileMesh(); cmA.scale.setScalar(0.95); cmA.position.set(2.15, -2.5, -0.4); cmA.userData.seed = 9.3;
+  items.push(cmA); g.add(cmA); // hoa cúc — motif chamomile
   g.userData.update = t => {
     items.forEach(c => {
       c.position.y += Math.sin(t * 0.5 + c.userData.seed) * 0.0012;
@@ -670,6 +716,8 @@ function bottleMesh(type, soft = false) { // chai lọ mỹ phẩm — tối gi�
   bust.position.set(-2.95, 0.05, -0.3); bust.scale.setScalar(0.85);
   bust.userData.seed = 8.5;
   items.push(bust); g.add(bust);
+  const cmH = chamomileMesh(true); cmH.scale.setScalar(1.0); cmH.position.set(2.9, -2.85, -0.6); cmH.userData.seed = 11.2;
+  items.push(cmH); g.add(cmH); // hoa cúc — motif chamomile
   g.userData.update = t => {
     items.forEach(el => {
       el.rotation.y = Math.sin(t * 0.3 + el.userData.seed) * 0.18;
@@ -695,6 +743,14 @@ function bottleMesh(type, soft = false) { // chai lọ mỹ phẩm — tối gi�
   const mq = mannequinMesh(true, false); // ma-nơ-canh trong lòng bố cục — không văng mép, không chạm chữ
   mq.position.set(2.95, -1.9, 0.2); mq.scale.setScalar(1.12);
   g.add(mq);
+  const cmU = chamomileMesh(); cmU.scale.setScalar(0.8); cmU.position.set(-3.55, -1.9, 0.1);
+  g.add(cmU); // hoa cúc trên sàn — motif chamomile
+  // cụm cúc nhỏ mọc dưới sào đồ — cao thấp xen kẽ, nghiêng nhẹ cho tự nhiên
+  [[-2.35, 0.62, 0.10, true], [-1.05, 0.85, -0.06, false], [0.30, 0.55, 0.14, true], [1.25, 0.72, -0.10, false]]
+    .forEach(([x, sc, rz, soft]) => {
+      const f = chamomileMesh(soft); f.scale.setScalar(sc); f.rotation.z = rz;
+      f.position.set(x, -1.9, -0.3); g.add(f);
+    });
   const items = [];
   for (let i = 0; i < 4; i++) {
     const it = new THREE.Group();
@@ -749,6 +805,11 @@ const plano = (() => {
     shelf.userData.skipClone = true;
     g.add(shelf);
   }
+  // hoa cúc hai bên chân kệ — motif chamomile (nguyên liệu mỹ phẩm)
+  [[-3.25, 1.05, false], [3.25, 0.9, true]].forEach(([x, sc, soft]) => {
+    const cm = chamomileMesh(soft); cm.scale.setScalar(sc);
+    cm.position.set(x, BASE - 0.35, 0); g.add(cm);
+  });
   g.userData.progress = 0;
   g.userData.update = t => {
     const p = g.userData.progress;
@@ -787,6 +848,8 @@ const plano = (() => {
   fl2.add(tubeLines(0.5, 0.38, 0, 1.1));
   fl2.add(tubeLines(0.2, 0.2, 1.1, 1.44));
   add(fl2, 5.6, 0.4, 1.5, 5.6);
+  add(chamomileMesh(), -7.3, -3.4, 1.5, 6.8);    // hoa cúc góc thấp-trái — khép motif, ngoài dải dồn band()
+  add(chamomileMesh(true), 6.8, 3.1, 0.85, 7.9);
   const sparkles2 = [];
   const mkSpark2 = (x, y, sc, seed) => {
     const sp = new THREE.Group();
@@ -849,6 +912,26 @@ let sparkIdx = 0, lastRay = 0;
 const raycaster = new THREE.Raycaster();
 raycaster.params.Line = { threshold: 0.3 };
 raycaster.params.Points = { threshold: 0.3 };
+
+/* hoa cúc lơ lửng ở khoảng chuyển giữa các section — motif chamomile nối mạch */
+const gapFlowers = new THREE.Group();
+{
+  // [gap thứ i (giữa SECTIONS[i] và [i+1]), x, lệch dọc, scale, seed]
+  const spots = [
+    [0, -3.4,  0.5, 0.80, 1.7], [0, 4.2, -0.4, 0.60, 4.1],
+    [1,  3.6,  0.3, 0.75, 2.3], [1, -4.4, -0.5, 0.55, 5.9],
+    [2, -3.2,  0.4, 0.70, 3.1], [2, 4.6, -0.3, 0.60, 7.2],
+    [3,  3.4,  0.5, 0.80, 1.2], [3, -4.6, -0.4, 0.55, 6.4],
+    [4, -3.6,  0.3, 0.75, 2.8], [4, 4.4, -0.5, 0.60, 8.3],
+  ];
+  spots.forEach(([gi, x, dy, sc, seed]) => {
+    const fl = chamomileMesh(true); // nét mờ — nền chuyển cảnh, không tranh chấp nội dung
+    fl.scale.setScalar(sc);
+    fl.userData = { gi, x, dy, sc, seed };
+    gapFlowers.add(fl);
+  });
+  scene.add(gapFlowers);
+}
 
 /* ---------- sync 3D world to document layout ---------- */
 const SECTIONS = ['hero', 'about', 'hm', 'uq', 'hs', 'contact'];
@@ -950,6 +1033,14 @@ function sync() {
     stage[id].position.y = -(el.offsetTop + el.offsetHeight / 2) * SCALE + (stage[id].userData.yOff || 0);
   });
   [stage.about, stage.hm, stage.uq, stage.hs].forEach(s => s.position.z = mobile ? -3.2 : 0);
+  // hoa cúc khoảng chuyển: neo vào ranh giới giữa hai section liên tiếp
+  gapFlowers.visible = !mobile;
+  gapFlowers.children.forEach(fl => {
+    const a = document.getElementById(SECTIONS[fl.userData.gi]);
+    const b = document.getElementById(SECTIONS[fl.userData.gi + 1]);
+    const yPx = (a.offsetTop + a.offsetHeight + b.offsetTop) / 2; // tâm khoảng chuyển
+    fl.position.set(fl.userData.x, -yPx * SCALE + fl.userData.dy, -1.6);
+  });
 }
 
 function syncY() { // cập nhật vị trí dọc cụm 3D theo layout — dùng khi accordion đang mở/đóng
@@ -978,7 +1069,13 @@ const mark = () => { lastInput = Date.now(); };
 const FINE = matchMedia('(pointer: fine)').matches;
 let mouseTgt = null;
 if (!reduced && window.Lenis) {
-  lenis = new Lenis({ lerp: 0.095, smoothWheel: true });
+  // macOS trackpad: giữ chế độ lerp (bám tay). Windows/chuột nấc: dùng duration+easing
+  // để mỗi nấc lăn chuột trượt có quán tính, gần cảm giác trackpad macOS.
+  const isMac = /Mac|iP(hone|ad|od)/.test(navigator.platform || '');
+  lenis = isMac
+    ? new Lenis({ lerp: 0.095, smoothWheel: true })
+    : new Lenis({ duration: 1.15, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                  smoothWheel: true, wheelMultiplier: 0.9 });
   lenis.on('scroll', ScrollTrigger.update);
   addEventListener('wheel', mark, { passive: true });
   addEventListener('touchmove', mark, { passive: true });
@@ -1007,8 +1104,22 @@ const skewSetter = gsap.quickTo('main', 'skewY', { duration: 0.5, ease: 'power3'
 
 /* custom cursor follower */
 const curEl = document.getElementById('cursor'), ringEl = document.getElementById('ring');
+const arrowEl = document.getElementById('scrollArrow');
+let arrowO = 0, arrowDir = 1; // độ hiện & hướng đã làm mượt của mũi tên cuộn
 const cur = { x: innerWidth / 2, y: innerHeight / 2, rx: innerWidth / 2, ry: innerHeight / 2 };
-addEventListener('pointermove', e => { cur.x = e.clientX; cur.y = e.clientY; });
+
+/* ẩn con trỏ giả khi chuột rời trang / chuyển app — tránh kẹt lại ở mép cửa sổ */
+let curShown = true;
+function setCursorVisible(v) {
+  if (curShown === v) return; curShown = v;
+  for (const el of [curEl, ringEl, arrowEl]) if (el) el.style.visibility = v ? '' : 'hidden';
+}
+addEventListener('pointermove', e => {
+  cur.x = e.clientX; cur.y = e.clientY;
+  if (!curShown) { cur.rx = cur.x; cur.ry = cur.y; setCursorVisible(true); } // hiện lại đúng vị trí, không trượt ngang màn hình
+});
+document.documentElement.addEventListener('mouseleave', () => setCursorVisible(false)); // chuột ra khỏi trang
+addEventListener('blur', () => setCursorVisible(false)); // chuyển sang app khác (Cmd+Tab, click app đè lên)
 document.addEventListener('mouseover', e => {
   const hot = !!e.target.closest('a, button');
   ringEl.classList.toggle('hot', hot);
@@ -1039,6 +1150,12 @@ function frame(nowMs) {
     const dist = Math.abs(camY - g.position.y) / VISH;
     const f = THREE.MathUtils.clamp(1.15 - dist * 1.6, 0, 1); // biến mất hẳn ở ~70% quãng chuyển section
     for (const m of fadeMats[id]) m.opacity = m.userData.base * f;
+  }
+
+  // hoa cúc khoảng chuyển đung đưa nhẹ, xoay theo vận tốc cuộn
+  for (const fl of gapFlowers.children) {
+    fl.rotation.y = Math.sin(t * 0.25 + fl.userData.seed) * 0.3 + spin * 0.4;
+    fl.rotation.z = Math.sin(t * 0.18 + fl.userData.seed * 2) * 0.08;
   }
 
   // rê chuột vào vật thể 3D -> nở kim tuyến tại điểm chạm
@@ -1084,6 +1201,19 @@ function frame(nowMs) {
   const rOff = ringEl.classList.contains('hot') ? 35 : 19;
   ringEl.style.transform = `translate(${cur.rx - rOff}px, ${cur.ry - rOff}px) scale(${1 - vAbs * 0.3}, ${1 + vAbs * 0.85})`; // kéo dãn dọc, không phình
   ringEl.style.opacity = (1 - vAbs * 0.35).toFixed(2);
+
+  // mũi tên chỉ hướng cuộn: nằm ngay trong lòng vòng tròn, thay chỗ chấm mực khi cuộn
+  if (arrowEl) {
+    const tgt = (vAbs > 0.02 && !ringEl.classList.contains('hot')) ? Math.min(vAbs * 3, 1) * 0.9 : 0;
+    arrowO = THREE.MathUtils.lerp(arrowO, tgt, tgt > arrowO ? 0.45 : 0.07); // hiện nhanh ngay khi cuộn, tan chậm khi ngừng
+    arrowDir = THREE.MathUtils.lerp(arrowDir, velo >= 0 ? 1 : -1, 0.18); // lật hướng mềm
+    const rot = (1 - arrowDir) * 90;                                    // 1→0°(xuống), -1→180°(lên)
+    arrowEl.style.opacity = arrowO.toFixed(2);
+    // bám đúng tâm vòng (cur.rx/cur.ry), co lại để gọn trong lòng vòng 38px
+    arrowEl.style.transform = `translate(${cur.rx - 7}px, ${cur.ry - 23}px) rotate(${rot}deg) scale(${(0.5 + vAbs * 0.16).toFixed(2)})`;
+    // chấm mực nhường chỗ cho mũi tên (trừ khi đang ẩn vì hover nút/link)
+    curEl.style.opacity = curEl.classList.contains('hide') ? '' : Math.max(0, 1 - arrowO * 2.2).toFixed(2);
+  }
 
   updateMilestones();
   renderer.render(scene, camera);
@@ -1287,8 +1417,16 @@ function xpSet(btn, open) {
 document.querySelectorAll('.xp-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const open = !btn.classList.contains('open');
-    if (open) { // tự trượt để phần chi tiết vào tầm đọc
-      const top = btn.getBoundingClientRect().top + scrollY - 110;
+    if (open) { // tự trượt để thấy trọn từ tiêu đề section đến hết phần chi tiết
+      const sec = btn.closest('section');
+      const ttl = sec.querySelector('h2') || btn;
+      const body = btn.parentElement.querySelector('.xp-body');
+      const titleTop = ttl.getBoundingClientRect().top + scrollY;
+      // đáy phần chi tiết sau khi mở = đáy nút + chiều cao thật của nội dung đang gập
+      const bodyBottom = btn.getBoundingClientRect().bottom + scrollY + body.scrollHeight + 24;
+      const need = bodyBottom - titleTop;
+      // đủ chỗ: chừa lề 84px trên tiêu đề; quá cao so với màn hình: ép sát hơn để lộ tối đa nội dung
+      const top = titleTop - (need > innerHeight - 110 ? 36 : 84);
       mark();
       if (lenis) lenis.scrollTo(top, { duration: 0.9, easing: tt => 1 - Math.pow(1 - tt, 3) });
       else scrollTo({ top, behavior: 'smooth' });
